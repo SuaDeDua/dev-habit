@@ -9,8 +9,11 @@ services:
     ports:
       - "8080"
       - "8081"
+      # Windows
     # volumes:
-    #   - ${APPDATA}/Microsoft/UserSecrets:/home/app/.microsoft/usersecrets:ro
+      # - ${APPDATA}/Microsoft/UserSecrets:/home/app/.microsoft/usersecrets:ro
+      # - ${APPDATA}/ASP.NET/Https:/home/app/.aspnet/https:rosoft/UserSecrets:/home/app/.microsoft/usersecrets:ro
+      # MacOS
     volumes:
       # macOS User Secrets path: uses the HOME environment variable for the root
       - ${HOME}/.microsoft/usersecrets:/home/app/.microsoft/usersecrets:ro
