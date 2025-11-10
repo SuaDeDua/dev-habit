@@ -3,7 +3,6 @@ using System;
 using DevHabit.Api.Database;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
-using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -12,11 +11,9 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace DevHabit.Api.Migrations.Application;
 
 [DbContext(typeof(ApplicationDbContext))]
-[Migration("20251105013615_Add_Habits")]
-partial class Add_Habits
+partial class ApplicationDbContextModelSnapshot : ModelSnapshot
 {
-    /// <inheritdoc />
-    protected override void BuildTargetModel(ModelBuilder modelBuilder)
+    protected override void BuildModel(ModelBuilder modelBuilder)
     {
 #pragma warning disable 612, 618
         modelBuilder
@@ -86,9 +83,9 @@ partial class Add_Habits
                             .HasColumnType("character varying(500)")
                             .HasColumnName("id");
 
-                        b1.Property<int>("TimePerPeriod")
+                        b1.Property<int>("TimesPerPeriod")
                             .HasColumnType("integer")
-                            .HasColumnName("frequency_time_per_period");
+                            .HasColumnName("frequency_times_per_period");
 
                         b1.Property<int>("Type")
                             .HasColumnType("integer")

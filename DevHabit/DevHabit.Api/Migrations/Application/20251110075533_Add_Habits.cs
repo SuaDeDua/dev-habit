@@ -24,7 +24,7 @@ public partial class Add_Habits : Migration
                 description = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: true),
                 type = table.Column<int>(type: "integer", nullable: false),
                 frequency_type = table.Column<int>(type: "integer", nullable: false),
-                frequency_time_per_period = table.Column<int>(type: "integer", nullable: false),
+                frequency_times_per_period = table.Column<int>(type: "integer", nullable: false),
                 target_value = table.Column<int>(type: "integer", nullable: false),
                 target_unit = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
                 status = table.Column<int>(type: "integer", nullable: false),
