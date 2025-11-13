@@ -6,3 +6,4 @@ public sealed record CreateTagDto
 
     public string? Description { get; set; }
 }
+
