@@ -1,6 +1,8 @@
-﻿using DevHabit.Api.Database;
+﻿using System.Linq.Dynamic.Core;
+using DevHabit.Api.Database;
 using DevHabit.Api.DTOs.Habits;
 using DevHabit.Api.Entities;
+using DevHabit.Api.Services.Sorting;
 using FluentValidation;
 using FluentValidation.Results;
 using Microsoft.AspNetCore.JsonPatch;
@@ -14,9 +16,20 @@ namespace DevHabit.Api.Controllers;
 public sealed class HabitsController(ApplicationDbContext dbContext) : ControllerBase
 {
     [HttpGet]
-    public async Task<ActionResult<HabitsCollectionDto>> GetHabits([FromQuery] HabitsQueryParameters query)
+    public async Task<ActionResult<HabitsCollectionDto>> GetHabits(
+            [FromQuery] HabitsQueryParameters query,
+            SortMappingProvider sortMappingProvider)
     {
+        if (!sortMappingProvider.ValidateMappings<HabitDto, Habit>(query.Sort))
+        {
+            return Problem(
+                    statusCode: StatusCodes.Status400BadRequest,
+                    detail: $"The provided sort parameter is't valid: '{query.Sort}'");
+        }
+
         query.Search ??= query.Search?.Trim().ToLower();
+
+        SortMapping[] sortMappings = sortMappingProvider.GetMappings<HabitDto, Habit>();
 
         List<HabitDto> habits = await dbContext
             .Habits
@@ -26,6 +39,8 @@ public sealed class HabitsController(ApplicationDbContext dbContext) : Controlle
                    )
             .Where(h => query.Type == null || h.Type == query.Type)
             .Where(h => query.Status == null || h.Status == query.Status)
+            .ApplySort(query.Sort, sortMappings)
+            .OrderBy("Name ASC, Description DESC, EndDate DESC")
             .Select(HabitQueries.ProjectToDto())
             .ToListAsync();
 
