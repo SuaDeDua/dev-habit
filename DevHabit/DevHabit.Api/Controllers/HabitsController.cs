@@ -1,5 +1,6 @@
 ﻿using System.Linq.Dynamic.Core;
 using DevHabit.Api.Database;
+using DevHabit.Api.DTOs.Common;
 using DevHabit.Api.DTOs.Habits;
 using DevHabit.Api.Entities;
 using DevHabit.Api.Services.Sorting;
@@ -16,7 +17,7 @@ namespace DevHabit.Api.Controllers;
 public sealed class HabitsController(ApplicationDbContext dbContext) : ControllerBase
 {
     [HttpGet]
-    public async Task<ActionResult<HabitsCollectionDto>> GetHabits(
+    public async Task<ActionResult<PaginationResult<HabitDto>>> GetHabits(
             [FromQuery] HabitsQueryParameters query,
             SortMappingProvider sortMappingProvider)
     {
@@ -31,25 +32,19 @@ public sealed class HabitsController(ApplicationDbContext dbContext) : Controlle
 
         SortMapping[] sortMappings = sortMappingProvider.GetMappings<HabitDto, Habit>();
 
-        List<HabitDto> habits = await dbContext
-            .Habits
-            .Where(h => query.Search == null ||
-                        h.Name.ToLower().Contains(query.Search) ||
-                        h.Description != null && h.Description.ToLower().Contains(query.Search)
-                   )
-            .Where(h => query.Type == null || h.Type == query.Type)
-            .Where(h => query.Status == null || h.Status == query.Status)
-            .ApplySort(query.Sort, sortMappings)
-            .OrderBy("Name ASC, Description DESC, EndDate DESC")
-            .Select(HabitQueries.ProjectToDto())
-            .ToListAsync();
+        IQueryable<HabitDto> habitsQuery = dbContext
+             .Habits
+             .Where(h => query.Search == null ||
+                         h.Name.ToLower().Contains(query.Search) ||
+                         h.Description != null && h.Description.ToLower().Contains(query.Search))
+             .Where(h => query.Type == null || h.Type == query.Type)
+             .Where(h => query.Status == null || h.Status == query.Status)
+             .ApplySort(query.Sort, sortMappings)
+             .Select(HabitQueries.ProjectToDto());
 
-        var habitsCollectionDto = new HabitsCollectionDto
-        {
-            Data = habits
-        };
+        var paginationResult = await PaginationResult<HabitDto>.CreateAsync(habitsQuery, query.Page, query.PageSize);
 
-        return Ok(habitsCollectionDto);
+        return Ok(paginationResult);
     }
 
     [HttpGet("{id}")]
