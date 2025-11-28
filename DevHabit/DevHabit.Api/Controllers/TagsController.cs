@@ -1,6 +1,9 @@
+using System.Net.Mime;
 using DevHabit.Api.Database;
+using DevHabit.Api.DTOs.Common;
 using DevHabit.Api.DTOs.Tags;
 using DevHabit.Api.Entities;
+using DevHabit.Api.Services;
 using FluentValidation;
 using FluentValidation.Results;
 using Microsoft.AspNetCore.Mvc;
@@ -11,10 +14,18 @@ namespace DevHabit.Api.Controllers;
 
 [ApiController]
 [Route("tags")]
-public sealed class TagsController(ApplicationDbContext dbContext) : ControllerBase
+[Produces(
+    MediaTypeNames.Application.Json,
+    CustomMediaTypeNames.Application.JsonV1,
+    CustomMediaTypeNames.Application.JsonV2,
+    CustomMediaTypeNames.Application.HateoasJson,
+    CustomMediaTypeNames.Application.HateoasJsonV1,
+    CustomMediaTypeNames.Application.HateoasJsonV2)]
+
+public sealed class TagsController(ApplicationDbContext dbContext, LinkService linkService) : ControllerBase
 {
     [HttpGet]
-    public async Task<ActionResult<TagsCollectionDto>> GetTags()
+    public async Task<ActionResult<TagsCollectionDto>> GetTags([FromHeader] AcceptHeaderDto acceptHeader)
     {
         List<TagDto> tags = await dbContext
             .Tags
@@ -26,11 +37,16 @@ public sealed class TagsController(ApplicationDbContext dbContext) : ControllerB
             Items = tags
         };
 
+        if (acceptHeader.IncludeLinks)
+        {
+            habitsCollectionDto.Links = CreateLinksForTags();
+        }
+
         return Ok(habitsCollectionDto);
     }
 
     [HttpGet("{id}")]
-    public async Task<ActionResult<TagDto>> GetTag(string id)
+    public async Task<ActionResult<TagDto>> GetTag(string id, [FromHeader] AcceptHeaderDto acceptHeader)
     {
         TagDto? tag = await dbContext
             .Tags
@@ -41,6 +57,11 @@ public sealed class TagsController(ApplicationDbContext dbContext) : ControllerB
         if (tag is null)
         {
             return NotFound();
+        }
+
+        if (acceptHeader.IncludeLinks)
+        {
+            tag.Links = CreateLinksForTag(id);
         }
 
         return Ok(tag);
@@ -116,5 +137,21 @@ public sealed class TagsController(ApplicationDbContext dbContext) : ControllerB
 
         return NoContent();
     }
-}
 
+    private List<LinkDto> CreateLinksForTags(TagsQueryParameters parameters)
+    {
+        List<LinkDto> links =
+            [
+                linkService.Create(nameof(GetTags),"seft", HttpMethods.Get, new
+                        {
+                            page = parameters.Page,
+                            pageSize = parameters.PageSize,
+                            fields = parameters.Fields,
+                            q = parameters.Search,
+                            sort = parameters.Sort,
+                            type = parameters.Type,
+                            status = parameters.Status
+                        }),
+            ];
+    }
+}
