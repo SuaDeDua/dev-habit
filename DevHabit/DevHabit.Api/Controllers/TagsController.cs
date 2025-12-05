@@ -1,103 +1,88 @@
-using System.Net.Mime;
+using DevHabit.Api.Common;
 using DevHabit.Api.Database;
+using DevHabit.Api.Dtos.Tags;
 using DevHabit.Api.DTOs.Common;
+using DevHabit.Api.DTOs.Habits;
 using DevHabit.Api.DTOs.Tags;
 using DevHabit.Api.Entities;
-using DevHabit.Api.Services;
+using DevHabit.Api.Extensions;
+using DevHabit.Api.Services.LinkServices;
 using FluentValidation;
-using FluentValidation.Results;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Infrastructure;
 using Microsoft.EntityFrameworkCore;
 
 namespace DevHabit.Api.Controllers;
 
 [ApiController]
-[Route("tags")]
-[Produces(
-    MediaTypeNames.Application.Json,
-    CustomMediaTypeNames.Application.JsonV1,
-    CustomMediaTypeNames.Application.JsonV2,
-    CustomMediaTypeNames.Application.HateoasJson,
-    CustomMediaTypeNames.Application.HateoasJsonV1,
-    CustomMediaTypeNames.Application.HateoasJsonV2)]
-
-public sealed class TagsController(ApplicationDbContext dbContext, LinkService linkService) : ControllerBase
+[Route("api/tags")]
+public sealed class TagsController(
+        ApplicationDbContext dbContext,
+        ILinkService linkService) : ControllerBase
 {
+    private readonly ApplicationDbContext _dbContext = dbContext;
+    private readonly ILinkService _linkService = linkService;
+
     [HttpGet]
-    public async Task<ActionResult<TagsCollectionDto>> GetTags([FromHeader] AcceptHeaderDto acceptHeader)
+    public async Task<IActionResult> GetTags(
+            TagsParameters tagsParameters,
+            IValidator<TagsParameters> validator)
     {
-        List<TagDto> tags = await dbContext
-            .Tags
+        await validator.ValidateAndThrowAsync(tagsParameters);
+
+        string? searchTerm = tagsParameters.SearchTerm?.Trim().ToLowerInvariant();
+
+        PaginationResult<TagDto> result = await _dbContext.Tags.AsNoTracking()
+            .Where(x =>
+                    searchTerm == null ||
+                    x.Name.ToLower().Contains(searchTerm) ||
+                    x.Description != null && x.Description.ToLower().Contains(searchTerm))
+            .SortByQueryString(tagsParameters.Sort, TagMappings.SortMapping.Mappings)
             .Select(TagQueries.ProjectToDto())
-            .ToListAsync();
+            .ToPaginationResultAsync(tagsParameters.Page, tagsParameters.PageSize);
 
-        var habitsCollectionDto = new TagsCollectionDto
-        {
-            Items = tags
-        };
-
-        if (acceptHeader.IncludeLinks)
-        {
-            habitsCollectionDto.Links = CreateLinksForTags();
-        }
-
-        return Ok(habitsCollectionDto);
+        return Ok(result);
     }
 
     [HttpGet("{id}")]
-    public async Task<ActionResult<TagDto>> GetTag(string id, [FromHeader] AcceptHeaderDto acceptHeader)
+    public async Task<IActionResult> GetTag(string id, TagParameters tagParameters)
     {
-        TagDto? tag = await dbContext
-            .Tags
-            .Where(h => h.Id == id)
+        string? fields = tagParameters.Fields;
+
+        ShapedResult? result = await _dbContext.Tags.AsNoTracking()
+            .Where(x => x.Id == id)
             .Select(TagQueries.ProjectToDto())
-            .FirstOrDefaultAsync();
+            .ToShapedFirstOrDefaultAsync(new()
+            {
+                Fields = fields,
+                Links = CreateLinksForTag(id, fields),
+                HttpContext = HttpContext,
+            });
 
-        if (tag is null)
-        {
-            return NotFound();
-        }
-
-        if (acceptHeader.IncludeLinks)
-        {
-            tag.Links = CreateLinksForTag(id);
-        }
-
-        return Ok(tag);
+        return result == null ? NotFound() : Ok(result.Item);
     }
 
     [HttpPost]
-    public async Task<ActionResult<TagDto>> CreateTag(
+    public async Task<IActionResult> CreateTag(
             CreateTagDto createTagDto,
-            IValidator<CreateTagDto> validator,
-            ProblemDetailsFactory problemDetailsFactory)
+            IValidator<CreateTagDto> validator)
     {
-        ValidationResult validationResult = await validator.ValidateAsync(createTagDto);
-
-        if (!validationResult.IsValid)
-        {
-            ProblemDetails problem = problemDetailsFactory.CreateProblemDetails(
-                    HttpContext,
-                    StatusCodes.Status400BadRequest);
-            problem.Extensions.Add("errors", validationResult.ToDictionary());
-
-            return BadRequest(problem);
-        }
+        await validator.ValidateAndThrowAsync(createTagDto);
 
         Tag tag = createTagDto.ToEntity();
 
-        if (await dbContext.Tags.AnyAsync(t => t.Name == tag.Name))
+        bool tagExists = await _dbContext.Tags
+            .AnyAsync(x => x.Name.ToLower() == createTagDto.Name.ToLower());
+
+        if (tagExists)
         {
             return Problem(
-                    detail: $"The tag '{tag.Name}' already exists",
+                    detail: $"The tag '{createTagDto.Name}' already exists",
                     statusCode: StatusCodes.Status409Conflict
                     );
         }
+        _dbContext.Tags.Add(tag);
 
-        dbContext.Tags.Add(tag);
-
-        await dbContext.SaveChangesAsync();
+        await _dbContext.SaveChangesAsync();
 
         TagDto tagDto = tag.ToDto();
 
@@ -105,53 +90,53 @@ public sealed class TagsController(ApplicationDbContext dbContext, LinkService l
     }
 
     [HttpPut("{id}")]
-    public async Task<ActionResult> UpdateTag(string id, UpdateTagDto updateTagDto)
+    public async Task<IActionResult> UpdateTag(string id, UpdateTagDto updateTagDto)
     {
-        Tag? tag = await dbContext.Tags.FirstOrDefaultAsync(h => h.Id == id);
+        Tag? tag = await _dbContext.Tags.FirstOrDefaultAsync(x => x.Id == id);
 
-        if (tag is null)
+        if (tag == null)
         {
             return NotFound();
         }
 
+        bool tagWithNameExists = await _dbContext.Tags
+            .AnyAsync(x => x.Id != id && x.Name.ToLower() == updateTagDto.Name.ToLower());
+
+        if (tagWithNameExists)
+        {
+            return Problem(
+                    title: $"The tag '{updateTagDto.Name}' already exists",
+                    statusCode: StatusCodes.Status409Conflict);
+        }
+
         tag.UpdateFromDto(updateTagDto);
 
-        await dbContext.SaveChangesAsync();
+        await _dbContext.SaveChangesAsync();
 
         return NoContent();
     }
 
     [HttpDelete("{id}")]
-    public async Task<ActionResult> DeleteTag(string id)
+    public async Task<IActionResult> DeleteTag(string id)
     {
-        Tag? tag = await dbContext.Tags.FirstOrDefaultAsync(h => h.Id == id);
+        Tag? tag = await _dbContext.Tags.FirstOrDefaultAsync(h => h.Id == id);
 
-        if (tag is null)
+        if (tag == null)
         {
             return NotFound();
         }
 
-        dbContext.Tags.Remove(tag);
+        _dbContext.Tags.Remove(tag);
 
-        await dbContext.SaveChangesAsync();
+        await _dbContext.SaveChangesAsync();
 
         return NoContent();
     }
 
-    private List<LinkDto> CreateLinksForTags(TagsQueryParameters parameters)
-    {
-        List<LinkDto> links =
+    private ICollection<LinkDto> CreateLinksForTag(string id, string? fields) =>
             [
-                linkService.Create(nameof(GetTags),"seft", HttpMethods.Get, new
-                        {
-                            page = parameters.Page,
-                            pageSize = parameters.PageSize,
-                            fields = parameters.Fields,
-                            q = parameters.Search,
-                            sort = parameters.Sort,
-                            type = parameters.Type,
-                            status = parameters.Status
-                        }),
+                _linkService.Create(nameof(GetTag), LinkRelations.Self,HttpMethods.Get, new{id,fields}),
+                _linkService.Create(nameof(UpdateTag), LinkRelations.Update,HttpMethods.Put, new{id}),
+                _linkService.Create(nameof(DeleteTag), LinkRelations.Delete,HttpMethods.Delete, new{id}),
             ];
-    }
 }

@@ -2,17 +2,17 @@
 
 public sealed class Habit
 {
-    public string Id { get; set; }
+    public required string Id { get; set; }
 
-    public string Name { get; set; } = string.Empty;
+    public required string Name { get; set; }
 
     public string? Description { get; set; }
 
     public HabitType Type { get; set; }
 
-    public Frequency Frequency { get; set; }
+    public required Frequency Frequency { get; set; }
 
-    public Target Target { get; set; }
+    public required Target Target { get; set; }
 
     public HabitStatus Status { get; set; }
 
@@ -22,15 +22,16 @@ public sealed class Habit
 
     public Milestone? Milestone { get; set; }
 
-    public DateTime CreatedAtUtc { get; set; }
+    public required DateTime CreatedAtUtc { get; set; }
 
     public DateTime? UpdatedAtUtc { get; set; }
 
     public DateTime? LastCompletedAtUtc { get; set; }
 
-    public List<HabitTag> HabitTags { get; set; }
+    // Navigation Proterties
+    public List<HabitTag> HabitTags { get; } = [];
 
-    public List<Tag> Tags { get; set; }
+    public List<Tag> Tags { get; } = [];
 }
 
 public enum HabitType
@@ -66,7 +67,7 @@ public sealed class Target
 {
     public int Value { get; set; }
 
-    public string Unit { get; set; }
+    public required string Unit { get; set; }
 }
 
 public sealed class Milestone

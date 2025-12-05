@@ -6,8 +6,13 @@ public sealed class CreateTagDtoValidator : AbstractValidator<CreateTagDto>
 {
     public CreateTagDtoValidator()
     {
-        RuleFor(x => x.Name).NotEmpty().MinimumLength(3);
+        RuleFor(x => x.Name)
+            .NotEmpty()
+            .Length(3, 50)
+            .WithName(x => nameof(x.Name).ToLowerInvariant());
 
-        RuleFor(x => x.Description).MaximumLength(50);
+        RuleFor(x => x.Description)
+            .Length(50)
+            .WithName(x => nameof(x.Description).ToLowerInvariant());
     }
 }

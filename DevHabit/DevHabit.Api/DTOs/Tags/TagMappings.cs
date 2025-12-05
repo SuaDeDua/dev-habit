@@ -1,13 +1,35 @@
-﻿using DevHabit.Api.DTOs.Tags;
+﻿using DevHabit.Api.Common;
 using DevHabit.Api.Entities;
 
 namespace DevHabit.Api.DTOs.Tags;
 
 internal static class TagMappings
 {
+    public static readonly SortMappingDefinition<TagDto, Tag> SortMapping = new()
+    {
+        Mappings = [
+            new SortMapping(nameof(TagDto.Id), nameof(Tag.Id)),
+            new SortMapping(nameof(TagDto.Name), nameof(Tag.Name)),
+            new SortMapping(nameof(TagDto.Description), nameof(Tag.Description)),
+            new SortMapping(nameof(TagDto.CreatedAtUtc), nameof(Tag.CreatedAtUtc)),
+            new SortMapping(nameof(TagDto.UpdatedUtc), nameof(Tag.UpdatedUtc)),
+        ]
+    };
+
+    public static Tag ToEntity(this CreateTagDto dto)
+    {
+        return new()
+        {
+            Id = $"t_{Guid.CreateVersion7()}",
+            Name = dto.Name,
+            Description = dto.Description,
+            CreatedAtUtc = DateTime.UtcNow
+        };
+    }
+
     public static TagDto ToDto(this Tag tag)
     {
-        return new TagDto
+        return new()
         {
             Id = tag.Id,
             Name = tag.Name,
@@ -15,19 +37,6 @@ internal static class TagMappings
             CreatedAtUtc = tag.CreatedAtUtc,
             UpdatedUtc = tag.UpdatedUtc
         };
-    }
-
-    public static Tag ToEntity(this CreateTagDto dto)
-    {
-        Tag habit = new()
-        {
-            Id = $"t_{Guid.CreateVersion7()}",
-            Name = dto.Name,
-            Description = dto.Description,
-            CreatedAtUtc = DateTime.UtcNow
-        };
-
-        return habit;
     }
 
     public static void UpdateFromDto(this Tag tag, UpdateTagDto dto)

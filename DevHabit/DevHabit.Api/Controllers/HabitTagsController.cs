@@ -1,5 +1,4 @@
 ﻿using DevHabit.Api.Database;
-using DevHabit.Api.DTOs.Habits;
 using DevHabit.Api.DTOs.HabitTags;
 using DevHabit.Api.Entities;
 using Microsoft.AspNetCore.Mvc;
@@ -8,43 +7,50 @@ using Microsoft.EntityFrameworkCore;
 namespace DevHabit.Api.Controllers;
 
 [ApiController]
-[Route("habits/{habitId}/tags")]
+[Route("/api/habits/{habitId}/tags")]
 public sealed class HabitTagsController(ApplicationDbContext dbContext) : ControllerBase
 {
-    public static readonly string Name = nameof(HabitTagsController).Replace("Controller", string.Empty);
+    public static readonly string Name = nameof(HabitTagsController)
+        .Replace("Controller", string.Empty, StringComparison.Ordinal);
+
+    private readonly ApplicationDbContext _dbContext = dbContext;
 
     [HttpPut]
-    public async Task<ActionResult> UpsertHabitTags(string habitId, UpsertHabitTagsDto upsertHabitTagsDto)
+    public async Task<IActionResult> UpsertHabitTags(string habitId, UpsertHabitTagsDto upsertHabitTagsDto)
     {
-        Habit? habit = await dbContext.Habits
-            .Include(h => h.HabitTags)
-            .FirstOrDefaultAsync(h => h.Id == habitId);
+        Habit? habit = await _dbContext.Habits
+            .Include(x => x.HabitTags)
+            .FirstOrDefaultAsync(x => x.Id == habitId);
 
         if (habit is null)
         {
             return NotFound();
         }
 
-        var currentTagIds = habit.HabitTags.Select(ht => ht.TagId).ToHashSet();
+        var currentTagIds = habit.HabitTags.Select(x => x.TagId).ToHashSet();
+
         if (currentTagIds.SetEquals(upsertHabitTagsDto.TagIds))
         {
             return NoContent();
         }
 
-        List<string> existingTagIds = await dbContext
-            .Tags
+        List<string> existingTagIds = await _dbContext.Tags
             .Where(t => upsertHabitTagsDto.TagIds.Contains(t.Id))
             .Select(t => t.Id)
             .ToListAsync();
 
         if (existingTagIds.Count != upsertHabitTagsDto.TagIds.Count)
         {
-            return BadRequest("One or more tag ID is invalid");
+            return Problem(
+                    detail: "One or more tag IDs are invalid",
+                    statusCode: StatusCodes.Status400BadRequest
+                    );
         }
 
-        habit.HabitTags.RemoveAll(ht => !upsertHabitTagsDto.TagIds.Contains(ht.TagId));
+        habit.HabitTags.RemoveAll(x => !upsertHabitTagsDto.TagIds.Contains(x.TagId));
 
         string[] tagIdsToAdd = upsertHabitTagsDto.TagIds.Except(currentTagIds).ToArray();
+
         habit.HabitTags.AddRange(tagIdsToAdd.Select(tagId => new HabitTag
         {
             HabitId = habitId,
@@ -52,25 +58,25 @@ public sealed class HabitTagsController(ApplicationDbContext dbContext) : Contro
             CreatedAtUtc = DateTime.UtcNow
         }));
 
-        await dbContext.SaveChangesAsync();
+        await _dbContext.SaveChangesAsync();
 
-        return Ok();
+        return NoContent();
     }
 
     [HttpDelete("{tagId}")]
-    public async Task<ActionResult> DeleteHabitTag(string habitId, string tagId)
+    public async Task<IActionResult> DeleteHabitTag(string habitId, string tagId)
     {
-        HabitTag? habitTag = await dbContext.HabitTags
-            .SingleOrDefaultAsync(ht => ht.HabitId == habitId && ht.TagId == tagId);
+        HabitTag? habitTag = await _dbContext.HabitTags
+            .FirstOrDefaultAsync(x => x.HabitId == habitId && x.TagId == tagId);
 
         if (habitTag is null)
         {
             return NotFound();
         }
 
-        dbContext.HabitTags.Remove(habitTag);
+        _dbContext.HabitTags.Remove(habitTag);
 
-        await dbContext.SaveChangesAsync();
+        await _dbContext.SaveChangesAsync();
 
         return NoContent();
     }

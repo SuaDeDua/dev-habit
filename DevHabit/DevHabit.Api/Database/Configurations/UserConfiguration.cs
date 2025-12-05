@@ -8,18 +8,18 @@ public sealed class UserConfiguration : IEntityTypeConfiguration<User>
 {
     public void Configure(EntityTypeBuilder<User> builder)
     {
-        builder.HasKey(u => u.Id);
+        builder.HasKey(x => x.Id);
 
-        builder.Property(h => h.Id).HasMaxLength(500);
+        builder.Property(x => x.Id).HasMaxLength(500);
 
-        builder.Property(u => u.Email).HasMaxLength(300);
+        builder.Property(x => x.IdentityId).HasMaxLength(500);
 
-        builder.Property(u => u.IdentityId).HasMaxLength(500);
+        builder.Property(x => x.Email).HasMaxLength(300);
 
-        builder.Property(u => u.Name).HasMaxLength(100);
+        builder.Property(x => x.Name).HasMaxLength(100);
 
-        builder.HasIndex(user => user.Email).IsUnique();
+        builder.HasIndex(x => x.IdentityId).IsUnique();
 
-        builder.HasIndex(user => user.IdentityId).IsUnique();
+        builder.HasIndex(x => x.Email).IsUnique();
     }
 }

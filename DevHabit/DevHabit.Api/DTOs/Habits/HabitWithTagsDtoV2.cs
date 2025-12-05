@@ -1,5 +1,4 @@
-﻿using DevHabit.Api.DTOs.Habits;
-using DevHabit.Api.Entities;
+﻿using DevHabit.Api.Entities;
 
 namespace DevHabit.Api.DTOs.Habits;
 
@@ -31,5 +30,5 @@ public sealed record HabitWithTagsDtoV2
 
     public DateTime? LastCompletedAt { get; init; }
 
-    public required string[] Tags { get; init; }
+    public required IReadOnlyCollection<string> Tags { get; init; }
 }

@@ -8,14 +8,14 @@ public sealed class TagConfiguration : IEntityTypeConfiguration<Tag>
 {
     public void Configure(EntityTypeBuilder<Tag> builder)
     {
-        builder.HasKey(t => t.Id);
+        builder.HasKey(x => x.Id);
 
-        builder.Property(t => t.Id).HasMaxLength(500);
+        builder.Property(x => x.Id).HasMaxLength(500);
 
-        builder.Property(t => t.Name).IsRequired().HasMaxLength(50);
+        builder.Property(x => x.Name).HasMaxLength(50);
 
-        builder.Property(t => t.Description).HasMaxLength(500);
+        builder.Property(x => x.Description).HasMaxLength(500);
 
-        builder.HasIndex(t => new { t.Name }).IsUnique();
+        builder.HasIndex(x => new { x.Name }).IsUnique();
     }
 }

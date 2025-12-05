@@ -1,6 +1,6 @@
 ﻿namespace DevHabit.Api.DTOs.HabitTags;
 
-public sealed class UpsertHabitTagsDto
+public sealed record UpsertHabitTagsDto
 {
-    public required List<string> TagIds { get; init; }
+    public required IReadOnlyCollection<string> TagIds { get; init; }
 }

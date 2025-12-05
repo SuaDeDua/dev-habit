@@ -30,6 +30,6 @@ public sealed record HabitWithTagsDto
 
     public DateTime? LastCompletedAtUtc { get; init; }
 
-    public required string[] Tags { get; init; }
+    public required IReadOnlyCollection<string> Tags { get; init; }
 }
 

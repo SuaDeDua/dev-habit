@@ -5,11 +5,29 @@ namespace DevHabit.Api.Extensions;
 
 public static class DatabaseExtensions
 {
-
-    public static async Task ApplyMigrationsAsync(this WebApplication app)
+    public static void ApplyMigrations<TDbContext>(this WebApplication app)
+        where TDbContext : DbContext
     {
         using IServiceScope scope = app.Services.CreateScope();
-        await using ApplicationDbContext dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        using TDbContext dbContext = scope.ServiceProvider.GetRequiredService<TDbContext>();
+
+        try
+        {
+            dbContext.Database.Migrate();
+            app.Logger.LogInformation("Database migrations applied successfully.");
+        }
+        catch (Exception ex)
+        {
+            app.Logger.LogError(ex, "An error occurred while applying database migrations.");
+            throw;
+        }
+    }
+
+    public static async Task ApplyMigrationsAsync<TDbContext>(this WebApplication app)
+        where TDbContext : DbContext
+    {
+        await using AsyncServiceScope scope = app.Services.CreateAsyncScope();
+        using TDbContext dbContext = scope.ServiceProvider.GetRequiredService<TDbContext>();
 
         try
         {
@@ -17,9 +35,9 @@ public static class DatabaseExtensions
 
             app.Logger.LogInformation("Database migrations applied successfully.");
         }
-        catch (Exception e)
+        catch (Exception ex)
         {
-            app.Logger.LogError(e, "An error occurred while applying database migrations.");
+            app.Logger.LogError(ex, "An error occurred while applying database migrations.");
             throw;
         }
     }

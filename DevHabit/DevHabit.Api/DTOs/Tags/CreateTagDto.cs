@@ -1,9 +1,12 @@
-﻿namespace DevHabit.Api.DTOs.Tags;
+﻿using Microsoft.AspNetCore.Mvc.ModelBinding.Validation;
 
+namespace DevHabit.Api.DTOs.Tags;
+
+[ValidateNever]
 public sealed record CreateTagDto
 {
-    public required string Name { get; set; }
+    public required string Name { get; init; }
 
-    public string? Description { get; set; }
+    public string? Description { get; init; }
 }
 

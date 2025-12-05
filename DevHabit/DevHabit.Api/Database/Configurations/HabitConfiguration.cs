@@ -8,23 +8,24 @@ public sealed class HabitConfiguration : IEntityTypeConfiguration<Habit>
 {
     public void Configure(EntityTypeBuilder<Habit> builder)
     {
-        builder.HasKey(h => h.Id);
+        builder.HasKey(x => x.Id);
 
-        builder.Property(h => h.Id).HasMaxLength(500);
+        builder.Property(x => x.Id).HasMaxLength(500);
 
-        builder.Property(h => h.Name).HasMaxLength(100);
+        builder.Property(x => x.Name).HasMaxLength(100);
 
-        builder.Property(h => h.Description).HasMaxLength(500);
+        builder.Property(x => x.Description).HasMaxLength(500);
 
-        builder.OwnsOne(h => h.Frequency);
+        builder.OwnsOne(x => x.Frequency);
 
-        builder.OwnsOne(h => h.Target, targetBuilder =>
+        builder.OwnsOne(x => x.Target, targetBuilder =>
         {
-            targetBuilder.Property(t => t.Unit).HasMaxLength(100);
+            targetBuilder.Property(x => x.Unit).HasMaxLength(100);
         });
-        builder.OwnsOne(h => h.Milestone);
 
-        builder.HasMany(h => h.Tags)
+        builder.OwnsOne(x => x.Milestone);
+
+        builder.HasMany(x => x.Tags)
             .WithMany()
             .UsingEntity<HabitTag>();
     }

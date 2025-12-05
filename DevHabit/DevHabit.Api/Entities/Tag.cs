@@ -2,13 +2,13 @@
 
 public sealed class Tag
 {
-    public string Id { get; set; }
+    public required string Id { get; set; }
 
-    public string Name { get; set; } = string.Empty;
+    public required string Name { get; set; }
 
     public string? Description { get; set; }
 
-    public DateTime CreatedAtUtc { get; set; }
+    public required DateTime CreatedAtUtc { get; set; }
 
     public DateTime? UpdatedUtc { get; set; }
 }

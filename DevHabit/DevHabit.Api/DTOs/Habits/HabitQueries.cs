@@ -8,105 +8,99 @@ internal static class HabitQueries
 {
     public static Expression<Func<Habit, HabitDto>> ProjectToDto()
     {
-        return h => new HabitDto
+        return habit => new()
         {
-            Id = h.Id,
-            Name = h.Name,
-            Description = h.Description,
-            Type = h.Type,
-            Frequency = new FrequencyDto
+            Id = habit.Id,
+            Name = habit.Name,
+            Description = habit.Description,
+            Type = habit.Type,
+            Frequency = new()
             {
-                Type = h.Frequency.Type,
-                TimesPerPeriod = h.Frequency.TimesPerPeriod
+                Type = habit.Frequency.Type,
+                TimesPerPeriod = habit.Frequency.TimesPerPeriod
             },
-            Target = new TargetDto
+            Target = new()
             {
-                Value = h.Target.Value,
-                Unit = h.Target.Unit
+                Value = habit.Target.Value,
+                Unit = habit.Target.Unit
             },
-            Status = h.Status,
-            IsArchived = h.IsArchived,
-            EndDate = h.EndDate,
-            Milestone = h.Milestone == null
-                        ? null
-                        : new MilestoneDto
-                        {
-                            Target = h.Milestone.Target,
-                            Current = h.Milestone.Current
-                        },
-            CreatedAtUtc = h.CreatedAtUtc,
-            UpdatedAtUtc = h.UpdatedAtUtc,
-            LastCompletedAtUtc = h.LastCompletedAtUtc
+            Status = habit.Status,
+            IsArchived = habit.IsArchived,
+            EndDate = habit.EndDate,
+            Milestone = habit.Milestone == null ? null : new()
+            {
+                Target = habit.Milestone.Target,
+                Current = habit.Milestone.Current
+            },
+            CreatedAtUtc = habit.CreatedAtUtc,
+            UpdatedAtUtc = habit.UpdatedAtUtc,
+            LastCompletedAtUtc = habit.LastCompletedAtUtc
         };
     }
 
     public static Expression<Func<Habit, HabitWithTagsDto>> ProjectToDtoWithTags()
     {
-        return h => new HabitWithTagsDto
+        return habit => new()
         {
-            Id = h.Id,
-            Name = h.Name,
-            Description = h.Description,
-            Type = h.Type,
-            Frequency = new FrequencyDto
+            Id = habit.Id,
+            Name = habit.Name,
+            Description = habit.Description,
+            Type = habit.Type,
+            Frequency = new()
             {
-                Type = h.Frequency.Type,
-                TimesPerPeriod = h.Frequency.TimesPerPeriod
+                Type = habit.Frequency.Type,
+                TimesPerPeriod = habit.Frequency.TimesPerPeriod
             },
-            Target = new TargetDto
+            Target = new()
             {
-                Value = h.Target.Value,
-                Unit = h.Target.Unit
+                Value = habit.Target.Value,
+                Unit = habit.Target.Unit
             },
-            Status = h.Status,
-            IsArchived = h.IsArchived,
-            EndDate = h.EndDate,
-            Milestone = h.Milestone == null
-                        ? null
-                        : new MilestoneDto
-                        {
-                            Target = h.Milestone.Target,
-                            Current = h.Milestone.Current
-                        },
-            CreatedAtUtc = h.CreatedAtUtc,
-            UpdatedAtUtc = h.UpdatedAtUtc,
-            LastCompletedAtUtc = h.LastCompletedAtUtc,
-            Tags = h.Tags.Select(t => t.Name).ToArray()
+            Status = habit.Status,
+            IsArchived = habit.IsArchived,
+            EndDate = habit.EndDate,
+            Milestone = habit.Milestone == null ? null : new()
+            {
+                Target = habit.Milestone.Target,
+                Current = habit.Milestone.Current
+            },
+            CreatedAtUtc = habit.CreatedAtUtc,
+            UpdatedAtUtc = habit.UpdatedAtUtc,
+            LastCompletedAtUtc = habit.LastCompletedAtUtc,
+            Tags = habit.Tags.Select(x => x.Name).ToArray()
         };
     }
 
     public static Expression<Func<Habit, HabitWithTagsDtoV2>> ProjectToDtoWithTagsV2()
     {
-        return h => new HabitWithTagsDtoV2
+        return habit => new()
         {
-            Id = h.Id,
-            Name = h.Name,
-            Description = h.Description,
-            Type = h.Type,
-            Frequency = new FrequencyDto
+            Id = habit.Id,
+            Name = habit.Name,
+            Description = habit.Description,
+            Type = habit.Type,
+            Frequency = new()
             {
-                Type = h.Frequency.Type,
-                TimesPerPeriod = h.Frequency.TimesPerPeriod
+                Type = habit.Frequency.Type,
+                TimesPerPeriod = habit.Frequency.TimesPerPeriod
             },
-            Target = new TargetDto
+            Target = new()
             {
-                Value = h.Target.Value,
-                Unit = h.Target.Unit
+                Value = habit.Target.Value,
+                Unit = habit.Target.Unit
             },
-            Status = h.Status,
-            IsArchived = h.IsArchived,
-            EndDate = h.EndDate,
-            Milestone = h.Milestone == null
-                        ? null
-                        : new MilestoneDto
-                        {
-                            Target = h.Milestone.Target,
-                            Current = h.Milestone.Current
-                        },
-            CreatedAt = h.CreatedAtUtc,
-            UpdatedAt = h.UpdatedAtUtc,
-            LastCompletedAt = h.LastCompletedAtUtc,
-            Tags = h.Tags.Select(t => t.Name).ToArray()
+            Status = habit.Status,
+            IsArchived = habit.IsArchived,
+            EndDate = habit.EndDate,
+            Milestone = habit.Milestone == null ? null : new()
+            {
+                Target = habit.Milestone.Target,
+                Current = habit.Milestone.Current
+            },
+            CreatedAt = habit.CreatedAtUtc,
+            UpdatedAt = habit.UpdatedAtUtc,
+            LastCompletedAt = habit.LastCompletedAtUtc,
+            Tags = habit.Tags.Select(x => x.Name).ToArray()
         };
     }
 }

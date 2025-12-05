@@ -1,0 +1,22 @@
+﻿using DevHabit.Api.DTOs.Common;
+
+namespace DevHabit.Api.Common;
+
+public sealed record PaginationResult<T> : ICollectionRespose<T>, IPaginationResult, ILinksRespose
+{
+    public required ICollection<T> Data { get; init; }
+
+    public int Page { get; init; }
+
+    public int PageSize { get; init; }
+
+    public long TotalCount { get; init; }
+
+    public long TotalPages => (int)Math.Ceiling(TotalCount / (double)PageSize);
+
+    public bool HasPreviousPage => Page > 1;
+
+    public bool HasNextPage => Page < TotalPages;
+
+    public List<LinkDto> Links { get; init; } = [];
+}

@@ -16,8 +16,8 @@ public sealed class CreateHabitDtoValidator : AbstractValidator<CreateHabitDto>
     {
         RuleFor(x => x.Name)
             .NotEmpty()
-            .MinimumLength(3)
-            .MaximumLength(100)
+            .WithMessage("Habit name must not be emty")
+            .Length(3, 100)
             .WithMessage("Habit name must be between 3 and 100 characters");
 
         RuleFor(x => x.Description)
@@ -46,7 +46,12 @@ public sealed class CreateHabitDtoValidator : AbstractValidator<CreateHabitDto>
         RuleFor(x => x.Target.Unit)
             .NotEmpty()
             .Must(unit => AllowedUnits.Contains(unit.ToLowerInvariant()))
-            .WithMessage($"Unit must be one of: {string.Join(", ", AllowedUnits)}");
+            .WithMessage($"Target unit must be one of: {string.Join(", ", AllowedUnits)}");
+
+        // Complex rules
+        RuleFor(x => x.Target.Unit)
+            .Must((dto, unit) => IsTargetUnitCompatibleWithType(dto.Type, unit))
+            .WithMessage("Target unit is not compatible with the habit type");
 
         // EndDate validation
         RuleFor(x => x.EndDate)
@@ -60,11 +65,6 @@ public sealed class CreateHabitDtoValidator : AbstractValidator<CreateHabitDto>
                 .GreaterThan(0)
                 .WithMessage("Milestone target must be greater than 0");
         });
-
-        // Complex rules
-        RuleFor(x => x.Target.Unit)
-            .Must((dto, unit) => IsTargetUnitCompatibleWithType(dto.Type, unit))
-            .WithMessage("Target unit is not compatible with the habit type");
     }
 
     private static bool IsTargetUnitCompatibleWithType(HabitType type, string unit)

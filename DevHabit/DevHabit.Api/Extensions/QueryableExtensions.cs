@@ -1,0 +1,155 @@
+﻿using System.Linq.Dynamic.Core;
+using DevHabit.Api.Common;
+using DevHabit.Api.Services.DataShapingServices;
+using FluentValidation;
+using Microsoft.EntityFrameworkCore;
+
+namespace DevHabit.Api.Extensions;
+
+public static class QueryableExtensions
+{
+    public static IQueryable<T> SortByQueryString<T>(
+            this IQueryable<T> query,
+            string? sort,
+            ICollection<SortMapping> mappings,
+            string? defaultOrderField = null)
+    {
+        if (string.IsNullOrWhiteSpace(sort))
+        {
+            return ApplyDefaultOrder(query, defaultOrderField);
+        }
+
+        string[] sortFields = sort
+            .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            .Select(x => x.ToLowerInvariant())
+            .ToArray();
+
+        if (!SortMapping.AreAllSortFieldsValid(mappings, sortFields))
+        {
+            throw new ValidationException([new("sort", $"Sort value '{sort}' is not valid")]);
+        }
+
+        List<string> sortClauses = new(sortFields.Length);
+
+        foreach (var sortField in sortFields)
+        {
+            Sort.Direction direction = sortField[0] == '-'
+                ? Sort.Direction.Desc
+                : Sort.Direction.Asc;
+
+            string field = direction == Sort.Direction.Desc
+                ? sortField[1..]
+                : sortField;
+
+            SortMapping mapping = mappings.First(x =>
+                    string.Equals(x.SortField, field, StringComparison.OrdinalIgnoreCase));
+
+            string sortDirection = (direction, mapping.Reverse) switch
+            {
+                (Sort.Direction.Asc, false) => "ASC",
+                (Sort.Direction.Desc, false) => "DESC",
+                (Sort.Direction.Asc, true) => "DESC",
+                (Sort.Direction.Desc, true) => "ASC",
+                _ => "ASC",
+            };
+
+            sortClauses.Add($"{mapping.PropertyName} {sortDirection}");
+        }
+
+        string orderQuery = string.Join(',', sortClauses);
+
+        return string.IsNullOrWhiteSpace(orderQuery)
+            ? ApplyDefaultOrder(query, defaultOrderField)
+            : query.OrderBy(orderQuery);
+    }
+
+    public static async Task<ShapedResult?> ToShapedFirstOrDefaultAsync<T>(
+            this IQueryable<T> query,
+            string? fields,
+            HttpContext httpContext)
+    {
+        var dataShapingService = httpContext.RequestServices.GetRequiredService<IDataShapingService>();
+
+        T? item = await query.FirstOrDefaultAsync();
+
+        return item is null
+            ? null
+            : new(dataShapingService.ShapeData(item, fields));
+    }
+
+    public static async Task<ShapedResult?> ToShapedFirstOrDefaultAsync<T>(
+            this IQueryable<T> query,
+            ShapedFirstOrDefaultOptions options)
+    {
+        var (fields, links, acceptHeader, httpContext) = options;
+
+        var dataShapingService = httpContext.RequestServices.GetRequiredService<IDataShapingService>();
+
+        T? item = await query.FirstOrDefaultAsync();
+
+        if (item is null)
+        {
+            return null;
+        }
+        ShapedResult result = new(dataShapingService.ShapeData(item, fields));
+
+        if (HateoasHelpers.ShouldIncludeHateoas(acceptHeader))
+        {
+            result.Item.TryAdd(HateoasPropertyNames.Links, links);
+        }
+
+        return result;
+    }
+
+    public static async Task<PaginationResult<T>> ToPaginationResultAsync<T>(
+            this IQueryable<T> query,
+            int page,
+            int pageSize)
+    {
+        long totalCount = await query.LongCountAsync();
+
+        List<T> items = await query
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync();
+
+        return new()
+        {
+            Data = items,
+            Page = page,
+            PageSize = pageSize,
+            TotalCount = totalCount,
+        };
+    }
+
+    public static async Task<ShapedPaginationResult> ToShapedPaginationResultAsync<T>(
+            this IQueryable<T> query,
+            ShapedPaginationResultOptions<T> options)
+    {
+        var (page, pageSize, fields, httpContext, linksFactory) = options;
+
+        var dataShapingService = httpContext.RequestServices.GetRequiredService<IDataShapingService>();
+
+        long totalCount = await query.LongCountAsync();
+
+        List<T> items = await query
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync();
+
+        return new()
+        {
+            Data = dataShapingService.ShapeCollectionData(items, fields, linksFactory),
+            Page = page,
+            PageSize = pageSize,
+            TotalCount = totalCount,
+        };
+    }
+
+    private static IQueryable<T> ApplyDefaultOrder<T>(IQueryable<T> query, string? defaultOrderField)
+    {
+        return string.IsNullOrWhiteSpace(defaultOrderField)
+            ? query
+            : query.OrderBy(defaultOrderField.ToLowerInvariant());
+    }
+}

@@ -7,13 +7,13 @@ internal static class TagQueries
 {
     public static Expression<Func<Tag, TagDto>> ProjectToDto()
     {
-        return t => new TagDto
+        return tag => new TagDto
         {
-            Id = t.Id,
-            Name = t.Name,
-            Description = t.Description,
-            CreatedAtUtc = t.CreatedAtUtc,
-            UpdatedUtc = t.CreatedAtUtc
+            Id = tag.Id,
+            Name = tag.Name,
+            Description = tag.Description,
+            CreatedAtUtc = tag.CreatedAtUtc,
+            UpdatedUtc = tag.CreatedAtUtc
         };
     }
 }

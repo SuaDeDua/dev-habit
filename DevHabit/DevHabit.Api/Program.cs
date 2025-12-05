@@ -1,7 +1,8 @@
 using DevHabit.Api;
+using DevHabit.Api.Database;
 using DevHabit.Api.Extensions;
 
-WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
+var builder = WebApplication.CreateBuilder(args);
 
 builder
     .AddApiServices()
@@ -10,13 +11,13 @@ builder
     .AddObservability()
     .AddApplicationServices();
 
-WebApplication app = builder.Build();
+var app = builder.Build();
 
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
 
-    await app.ApplyMigrationsAsync();
+    app.ApplyMigrations<ApplicationDbContext>();
 }
 
 app.UseHttpsRedirection();
@@ -25,4 +26,4 @@ app.UseExceptionHandler();
 
 app.MapControllers();
 
-await app.RunAsync();
+app.Run();

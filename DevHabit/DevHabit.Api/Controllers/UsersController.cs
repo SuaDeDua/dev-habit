@@ -6,22 +6,19 @@ using Microsoft.EntityFrameworkCore;
 namespace DevHabit.Api.Controllers;
 
 [ApiController]
-[Route("users")]
-internal sealed class UsersController(ApplicationDbContext dbContext) : ControllerBase
+[Route("api/users")]
+public sealed class UsersController(ApplicationDbContext dbContext) : ControllerBase
 {
+    private readonly ApplicationDbContext _dbContext = dbContext;
+
     [HttpGet("{id}")]
-    public async Task<ActionResult<UserDto>> GetUserById(string id)
+    public async Task<IActionResult> GetUserById(string id)
     {
-        UserDto? user = await dbContext.Users
+        UserDto? user = await _dbContext.Users.AsNoTracking()
             .Where(u => u.Id == id)
             .Select(UserQueries.ProjectToDto())
             .FirstOrDefaultAsync();
 
-        if (user is null)
-        {
-            return NotFound();
-        }
-
-        return Ok(user);
+        return user == null ? NotFound() : Ok(user);
     }
 }
