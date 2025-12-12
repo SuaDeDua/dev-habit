@@ -1,0 +1,439 @@
+### 
+
+# Get habits
+
+# @name GET_HABITS
+
+GET https://localhost:5001/api/habits HTTP/1.1
+Accept: application/vnd.dev-habit.hateoas.1+json
+
+
+### 
+
+# Get habit by ID
+
+@id = h_019b1071-dd2c-7f72-864e-0a2475c17490
+
+# @name GET_HABIT_BY_ID
+
+GET https://localhost:5001/api/habits/{{id}}?fields=name,createdAtUtc,updatedAtUtc,lastCompletedAtUtc HTTP/1.1
+Accept: application/vnd.dev-habit.hateoas.1+json
+
+
+### 
+
+# Create habit
+
+# @name CREATE_HABIT
+
+POST https://localhost:5001/api/habits HTTP/1.1
+Accept: application/vnd.dev-habit.hateoas.1+json
+Content-Type: application/json
+
+{
+  "automationSource": 1,
+  "description": null,
+  "frequency": {
+    "timesPerPeriod": 1,
+    "type": 2
+  },
+  "name": "Daily Coding",
+  "target": {
+    "unit": "minutes",
+    "value": 30
+  },
+  "type": 2
+}
+
+
+### 
+
+# Update habit
+
+# @name UPDATE_HABIT
+
+PUT https://localhost:5001/habits/:id HTTP/1.1
+Content-Type: application/json
+
+{
+  "description": "The new description of the habit",
+  "frequency": {
+    "timesPerPeriod": 1,
+    "type": 1
+  },
+  "milestone": {
+    "target": 100
+  },
+  "name": "Daily Coding",
+  "target": {
+    "unit": "minutes",
+    "value": 45
+  },
+  "type": 2
+}
+
+
+### 
+
+# Partially update habit
+
+# @name PARTIALLY_UPDATE_HABIT
+
+PATCH https://localhost:5001/habits/:id HTTP/1.1
+Content-Type: application/json-patch+json
+
+[
+  {
+    "op": "replace",
+    "path": "/name",
+    "value": "Daily Coding"
+  }
+]
+
+
+### 
+
+# Delete habit
+
+# @name DELETE_HABIT
+
+DELETE https://localhost:5001/habits/:id HTTP/1.1
+
+
+### 
+
+# Register
+
+# @name REGISTER
+
+POST https://localhost:5001/auth/register HTTP/1.1
+Content-Type: application/json
+
+{
+  "confirmPassword": "<YOUR_PASSWORD>",
+  "email": "<YOUR_EMAIL>",
+  "name": "<YOUR_NAME>",
+  "password": "<YOUR_PASSWORD>"
+}
+
+
+### 
+
+# Login
+
+# @name LOGIN
+
+POST https://localhost:5001/auth/login HTTP/1.1
+Content-Type: application/json
+
+{
+  "email": "<YOUR_EMAIL>",
+  "password": "<YOUR_PASSWORD>"
+}
+
+
+### 
+
+# Refresh
+
+# @name REFRESH
+
+POST https://localhost:5001/auth/refresh HTTP/1.1
+Content-Type: application/json
+
+{
+  "refreshToken": "<YOUR_REFRESH_TOKEN>"
+}
+
+
+### 
+
+# Store GitHub PAT
+
+# @name STORE_GITHUB_PAT
+
+PUT https://localhost:5001/github/personal-access-token HTTP/1.1
+Content-Type: application/json
+
+{
+  "accessToken": "<YOUR_GITHUB_PAT>",
+  "expiresInDays": 30
+}
+
+
+### 
+
+# Get GitHub profile
+
+# @name GET_GITHUB_PROFILE
+
+GET https://localhost:5001/github/profile HTTP/1.1
+Accept: application/vnd.dev-habit.hateoas+json
+Content-Type: application/json
+
+{
+  "pat": ""
+}
+
+
+### 
+
+# Revoke access token
+
+# @name REVOKE_ACCESS_TOKEN
+
+DELETE https://localhost:5001/github/personal-access-token HTTP/1.1
+
+
+### 
+
+# Health
+
+# @name HEALTH
+
+GET https://localhost:5001/health HTTP/1.1
+
+
+### 
+
+# Get GitHub events
+
+# @name GET_GITHUB_EVENTS
+
+GET https://localhost:5001/github/profile/events HTTP/1.1
+Content-Type: application/json
+
+{
+  "pat": ""
+}
+
+
+### 
+
+# Get tags
+
+# @name GET_TAGS
+
+GET https://localhost:5001/tags HTTP/1.1
+Accept: application/vnd.dev-habit.hateoas+json
+
+
+### 
+
+# Get tag by iD
+
+# @name GET_TAG_BY_ID
+
+GET https://localhost:5001/tags/:id HTTP/1.1
+Accept: application/vnd.dev-habit.hateoas.1+json
+
+
+### 
+
+# Create tag
+
+# @name CREATE_TAG
+
+POST https://localhost:5001/tags HTTP/1.1
+Content-Type: application/json
+
+{
+  "description": null,
+  "name": ".net"
+}
+
+
+### 
+
+# Update tag
+
+# @name UPDATE_TAG
+
+PUT https://localhost:5001/tags/:id HTTP/1.1
+Content-Type: application/json
+If-Match: "07F02DD4545A2099BC9C4DCA31B27F4A3F373847251718CF2B547C1B01C355B41E012B34A6590A29116AAE6629912FABE32832A1D36ABDCA08D376D1171359DD"
+
+{
+  "description": "Detailed tag description123456",
+  "name": ".net"
+}
+
+
+### 
+
+# Update tag - Concurrent
+
+# @name UPDATE_TAG_-_CONCURRENT
+
+PUT https://localhost:5001/tags/:id HTTP/1.1
+Content-Type: application/json
+If-Match: "15DA8B1B9F298AFA64D052058B37078AE4B6FBB18DF3AE1DE683CDA18A6AD88D90D2D7829386E9674AD6AC0E0159444ACC530B3063138CCA4AECC70568643E3D"
+
+{
+  "description": "Detailed tag description",
+  "name": ".net"
+}
+
+
+### 
+
+# Delete tag
+
+# @name DELETE_TAG
+
+DELETE https://localhost:5001/tags/:id HTTP/1.1
+
+
+### 
+
+# Get current user
+
+# @name GET_CURRENT_USER
+
+GET https://localhost:5001/users/me HTTP/1.1
+
+
+### 
+
+# Get user by ID
+
+# @name GET_USER_BY_ID
+
+GET https://localhost:5001/users/:id HTTP/1.1
+
+
+### 
+
+# Update current user
+
+# @name UPDATE_CURRENT_USER
+
+PUT https://localhost:5001/users/me/profile HTTP/1.1
+Content-Type: application/json
+
+{
+  "userName": "<YOUR_USERNAME>"
+}
+
+
+### 
+
+# Create entry
+
+# @name CREATE_ENTRY
+
+POST https://localhost:5001/entries HTTP/1.1
+Accept: application/vnd.dev-habit.hateoas+json
+Content-Type: application/json
+
+{
+  "date": "2025-02-13",
+  "habitId": "h_0194f454-31d4-780d-ac00-08535499b0a0",
+  "value": 1
+}
+
+
+### 
+
+# Import entries
+
+# @name IMPORT_ENTRIES
+
+POST https://localhost:5001/entries/imports HTTP/1.1
+Accept: application/vnd.dev-habit.hateoas+json
+
+
+### 
+
+# Get entries
+
+# @name GET_ENTRIES
+
+GET https://localhost:5001/entries HTTP/1.1
+Accept: application/vnd.dev-habit.hateoas+json
+
+
+### 
+
+# Get entry import by ID
+
+# @name GET_ENTRY_IMPORT_BY_ID
+
+GET https://localhost:5001/entries/imports/:id HTTP/1.1
+Accept: application/vnd.dev-habit.hateoas+json
+
+
+### 
+
+# Get entries - cursor
+
+# @name GET_ENTRIES_-_CURSOR
+
+GET https://localhost:5001/entries/cursor?cursor=eyJJZCI6ImVfMDE5NGY5M2EtYzczNS03OTZkLWI3OWQtMmJmMGVhMWY2ODljIiwiRGF0ZSI6IjIwMjUtMDEtMjQifQ
+ &limit=100 HTTP/1.1
+Accept: application/vnd.dev-habit.hateoas+json
+
+
+### 
+
+# Get entries stats
+
+# @name GET_ENTRIES_STATS
+
+GET https://localhost:5001/entries/stats HTTP/1.1
+Accept: application/vnd.dev-habit.hateoas+json
+
+
+### 
+
+# Get entry by ID
+
+# @name GET_ENTRY_BY_ID
+
+GET https://localhost:5001/entries/:id?fields=id,value,externalId HTTP/1.1
+Accept: application/vnd.dev-habit.hateoas+json
+
+
+### 
+
+# Archive entry
+
+# @name ARCHIVE_ENTRY
+
+PUT https://localhost:5001/entries/:id/archive HTTP/1.1
+Accept: application/vnd.dev-habit.hateoas+json
+
+
+### 
+
+# Un-archive entry
+
+# @name UN-ARCHIVE_ENTRY
+
+PUT https://localhost:5001/entries/:id/un-archive HTTP/1.1
+Accept: application/vnd.dev-habit.hateoas+json
+
+
+### 
+
+# Upsert habit tags
+
+# @name UPSERT_HABIT_TAGS
+
+PUT https://localhost:5001/habits/:habitId/tags HTTP/1.1
+Content-Type: application/json
+
+{
+  "tagIds": [
+    "t_0194ebd4-4442-7dc8-8580-00241e8ac24b"
+  ]
+}
+
+
+### 
+
+# Remove habit tag
+
+# @name REMOVE_HABIT_TAG
+
+DELETE https://localhost:5001/habits/:habitId/tags/:tagId HTTP/1.1

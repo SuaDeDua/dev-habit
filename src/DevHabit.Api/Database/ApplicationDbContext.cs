@@ -1,4 +1,5 @@
-﻿using DevHabit.Api.Entities;
+﻿using DevHabit.Api.Database.Configurations;
+using DevHabit.Api.Entities;
 using Microsoft.EntityFrameworkCore;
 
 namespace DevHabit.Api.Database;
@@ -17,6 +18,9 @@ public sealed class ApplicationDbContext(DbContextOptions<ApplicationDbContext> 
     {
         modelBuilder.HasDefaultSchema(Schemas.Application);
 
-        modelBuilder.ApplyConfigurationsFromAssembly(typeof(ApplicationDbContext).Assembly);
+        modelBuilder.ApplyConfiguration(new HabitConfiguration());
+        modelBuilder.ApplyConfiguration(new TagConfiguration());
+        modelBuilder.ApplyConfiguration(new HabitTagConfiguration());
+        modelBuilder.ApplyConfiguration(new UserConfiguration());
     }
 }

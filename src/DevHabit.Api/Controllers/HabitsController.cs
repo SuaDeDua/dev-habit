@@ -1,12 +1,10 @@
-﻿using System.Net.Mime;
-using Asp.Versioning;
+﻿using Asp.Versioning;
 using DevHabit.Api.Common;
 using DevHabit.Api.Database;
 using DevHabit.Api.Dtos.Habits;
 using DevHabit.Api.Dtos.Common;
 using DevHabit.Api.Entities;
 using DevHabit.Api.Extensions;
-using DevHabit.Api.Services;
 using DevHabit.Api.Services.DataShapingServices;
 using DevHabit.Api.Services.LinkServices;
 using FluentValidation;
@@ -19,7 +17,6 @@ namespace DevHabit.Api.Controllers;
 [ApiController]
 [Route("api/habits")]
 [ApiVersion(1.0)]
-
 public sealed class HabitsController(
         ApplicationDbContext dbContext,
         ILinkService linkService) : ControllerBase
@@ -28,7 +25,6 @@ public sealed class HabitsController(
     private readonly ILinkService _linkService = linkService;
 
     [HttpGet]
-    [Produces(MediaTypeNames.Application.Json, CustomMediaTypesNames.Application.HateoasJson)]
     public async Task<IActionResult> GetHabits(
             HabitsParameters habitParams,
             IValidator<HabitsParameters> validator)
@@ -107,7 +103,6 @@ public sealed class HabitsController(
     }
 
     [HttpPost]
-    [Consumes(MediaTypeNames.Application.Json)]
     public async Task<ActionResult<HabitDto>> CreateHabit(
             CreateHabitDto createHabitDto,
             [FromHeader(Name = "Accept")] string? acceptHeader,
@@ -205,7 +200,7 @@ public sealed class HabitsController(
                     endpointName: nameof(HabitTagsController.UpsertHabitTags),
                     rel: LinkRelations.UpsertTags,
                     method: HttpMethods.Put,
-                    values: new {habit=id},
+                    values: new {habitId=id},
                     controllerName:HabitTagsController.Name),
         ];
 

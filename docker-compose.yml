@@ -1,66 +1,44 @@
 services:
-  devhabit.postgres:
-    container_name: devhabit.postgres
-    image: postgres:17.5-alpine3.21
-    restart: unless-stopped
+  devhabit.api:
+    image: ${DOCKER_REGISTRY-}devhabitapi
+    build:
+      context: .
+      dockerfile: src/DevHabit.Api/Dockerfile
     ports:
-      - 5432:${POSTGRES_PORT}
+      - 5001:8081
+      - 5002:8082
     environment:
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-      POSTGRES_DB: ${POSTGRES_DB}
-    volumes:
-      - postgres-data:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
-      start_period: 10s
-      interval: 10s
-      retries: 3
-      timeout: 10s
+      # Seq
+      # - OTEL_EXPORTER_OTLP_ENDPOINT=http://devhabit.seq:5341/ingest/otlp
+      # - OTEL_EXPORTER_OTLP_PROTOCOL=http/protobuf
+      # Aspire Dashboard
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://devhabit.aspire-dashboard:18889
+      - OTEL_EXPORTER_OTLP_PROTOCOL=grpc
 
-  devhabit.pgadmin:
-    container_name: devhabit.pgadmin
-    image: dpage/pgadmin4:9.3.0
-    restart: unless-stopped
-    ports:
-      - 8080:80
+  devhabit.postgres:
+    image: postgres:17.2
     environment:
-      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL}
-      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD}
+      POSTGRES_DB: devhabit
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
     volumes:
-      - pgadmin-data:/var/lib/pgadmin
-      - pgadmin-data:/certs/server.cert
-      - pgadmin-data:/certs/server.key
-      - pgadmin-data:/pgadmin4/servers.json
-    depends_on:
-      devhabit.postgres:
-        condition: service_healthy
-        restart: true
+      - ./.containers/postgres_data:/var/lib/postgresql/data
+    ports:
+      - 5432:5432
 
   devhabit.seq:
-    container_name: devhabit.seq
-    image: datalust/seq:2025.1
-    restart: unless-stopped
-    ports:
-      - 7080:80
-      - 5341:5341
+    image: datalust/seq:2024.3 # or latest
     environment:
       ACCEPT_EULA: "Y"
     volumes:
-      - seq-data:/data
+      - ./.containers/seq_data:/data
+    ports:
+      - 8080:80
+      - 5341:5341
 
   devhabit.aspire-dashboard:
-    container_name: devhabit.aspire-dashboard
-    image: mcr.microsoft.com/dotnet/aspire-dashboard:9.2
+    image: mcr.microsoft.com/dotnet/aspire-dashboard:9.0
+    environment:
+      DOTNET_DASHBOARD_UNSECURED_ALLOW_ANONYMOUS: true
     ports:
       - 18888:18888
-      - 18889:18889
-    environment:
-      DOTNET_DASHBOARD_UNSECURED_ALLOW_ANONYMOUS: "true"
-
-volumes:
-  postgres-data:
-  pgadmin-data:
-    external: true
-  seq-data:
-

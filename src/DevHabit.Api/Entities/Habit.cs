@@ -28,7 +28,7 @@ public sealed class Habit
 
     public DateTime? LastCompletedAtUtc { get; set; }
 
-    // Navigation Proterties
+    // // Navigation Proterties
     public List<HabitTag> HabitTags { get; } = [];
 
     public List<Tag> Tags { get; } = [];

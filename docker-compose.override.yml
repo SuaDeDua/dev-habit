@@ -1,0 +1,21 @@
+services:
+  devhabit.api:
+    environment:
+      - ASPNETCORE_Kestrel__Certificates__Default__Path=/home/app/.aspnet/https/aspnetapp.pfx
+      - ASPNETCORE_Kestrel__Certificates__Default__Password=AspireDockerPassword123
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_HTTP_PORTS=8080
+      - ASPNETCORE_HTTPS_PORTS=8081
+    ports:
+      - "8080"
+      - "8081"
+      # Windows
+    # volumes:
+      # - ${APPDATA}/Microsoft/UserSecrets:/home/app/.microsoft/usersecrets:ro
+      # - ${APPDATA}/ASP.NET/Https:/home/app/.aspnet/https:rosoft/UserSecrets:/home/app/.microsoft/usersecrets:ro
+      # MacOS
+    volumes:
+      # macOS User Secrets path: uses the HOME environment variable for the root
+      - ${HOME}/.microsoft/usersecrets:/home/app/.microsoft/usersecrets:ro
+      # macOS ASP.NET HTTPS certs path: uses the HOME environment variable for the root
+      - ${HOME}/.aspnet/https:/home/app/.aspnet/https:ro   #   - ${APPDATA}/ASP.NET/Https:/home/app/.aspnet/https:ro
