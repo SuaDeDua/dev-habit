@@ -10,5 +10,5 @@ public sealed record TagDto
 
     public required DateTime CreatedAtUtc { get; init; }
 
-    public DateTime? UpdatedUtc { get; init; }
+    public DateTime? UpdatedAtUtc { get; init; }
 }

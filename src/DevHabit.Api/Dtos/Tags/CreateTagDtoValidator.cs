@@ -8,11 +8,13 @@ public sealed class CreateTagDtoValidator : AbstractValidator<CreateTagDto>
     {
         RuleFor(x => x.Name)
             .NotEmpty()
+            .WithMessage("Tag name must not be emty")
             .Length(3, 50)
-            .WithName(x => nameof(x.Name).ToLowerInvariant());
+            .WithName(x => nameof(x.Name).ToLowerInvariant())
+            .WithMessage("Tag name must be between 3 and 50 characters");
 
         RuleFor(x => x.Description)
             .Length(50)
-            .WithName(x => nameof(x.Description).ToLowerInvariant());
+            .WithMessage("Tag description can not exceed 50 characters");
     }
 }

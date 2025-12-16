@@ -1,0 +1,85 @@
+@BasePath = api/habits
+@DevHabitApiHostAddress = https://localhost:5001
+@Fields = fields=id,name,createdAtUtc
+@ResourceId = h_019b1071-dd2c-7f72-864e-0a2475c17490
+
+
+### Get Habits
+
+GET {{DevHabitApiHostAddress}}/{{BasePath}}?{{Fields}} HTTP/1.1
+Accept: application/json
+
+### Get Habit by Id
+
+GET {{DevHabitApiHostAddress}}/{{BasePath}}/{{ResourceId}} HTTP/1.1
+Content-Type: application/vnd.dev-habit.hateoas+json
+
+### Create Habit
+
+POST {{DevHabitApiHostAddress}}/{{BasePath}} HTTP/1.1
+Accept: application/json
+Content-Type: application/json
+
+{
+  "name": "hurl better than kulala",
+  "description": null,
+  "type": 1,
+  "frequency": {
+    "type": 2,
+    "timesPerPeriod": 1
+  },
+  "target": {
+    "value": 30,
+    "unit": "minutes"
+  },
+  "milestone": {
+    "target": 1
+  },
+  "endDate": "2024-12-01"
+}
+
+### Update Habit
+
+PUT {{DevHabitApiHostAddress}}/{{BasePath}}/{{ResourceId}} HTTP/1.1
+Accept: application/json
+Content-Type: application/json
+
+{
+  "name": "Daily Coding",
+  "description": "The new description",
+  "type": 2,
+  "frequency": {
+    "type": 2,
+    "timesPerPeriod": 1
+  },
+  "target": {
+    "value": 30,
+    "unit": "minutes"
+  },
+  "milestone": {
+    "target": 1
+  }
+}
+
+### Partially Update Habit
+
+PATCH {{DevHabitApiHostAddress}}/{{BasePath}}/{{ResourceId}} HTTP/1.1
+Accept: application/json
+Content-Type: application/json
+
+[
+  {
+    "op": "replace",
+    "path": "/name",
+    "value": "Daily Coding (Update)"
+  },
+  {
+    "op": "remove",
+    "path": "/description"
+  }
+]
+
+### Delete Habit
+
+DELETE {{DevHabitApiHostAddress}}/{{BasePath}}/{{ResourceId}} HTTP/1.1
+Accept: application/json

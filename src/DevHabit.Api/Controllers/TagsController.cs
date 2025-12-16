@@ -70,8 +70,10 @@ public sealed class TagsController(
         Tag tag = createTagDto.ToEntity();
 
         bool tagExists = await _dbContext.Tags
-            .AnyAsync(x => string.Equals(x.Name, createTagDto.Name, StringComparison.OrdinalIgnoreCase));
+            .AnyAsync(x => x.Name.ToLower() == createTagDto.Name.ToLower());
 
+        // bool tagExists = await _dbContext.Tags
+        //     .AnyAsync(x => string.Equals(x.Name, createTagDto.Name, StringComparison.OrdinalIgnoreCase));
         if (tagExists)
         {
             return Problem(
@@ -99,7 +101,7 @@ public sealed class TagsController(
         }
 
         bool tagWithNameExists = await _dbContext.Tags
-            .AnyAsync(x => x.Id != id && string.Equals(x.Name, updateTagDto.Name, StringComparison.OrdinalIgnoreCase));
+            .AnyAsync(x => x.Id != id && x.Name.ToLower() == updateTagDto.Name.ToLower());
 
         if (tagWithNameExists)
         {

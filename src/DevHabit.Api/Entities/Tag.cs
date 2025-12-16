@@ -10,5 +10,5 @@ public sealed class Tag
 
     public required DateTime CreatedAtUtc { get; set; }
 
-    public DateTime? UpdatedUtc { get; set; }
+    public DateTime? UpdatedAtUtc { get; set; }
 }

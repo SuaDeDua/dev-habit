@@ -12,7 +12,7 @@ internal static class TagMappings
             new SortMapping(nameof(TagDto.Name), nameof(Tag.Name)),
             new SortMapping(nameof(TagDto.Description), nameof(Tag.Description)),
             new SortMapping(nameof(TagDto.CreatedAtUtc), nameof(Tag.CreatedAtUtc)),
-            new SortMapping(nameof(TagDto.UpdatedUtc), nameof(Tag.UpdatedUtc)),
+            new SortMapping(nameof(TagDto.UpdatedAtUtc), nameof(Tag.UpdatedAtUtc)),
         ]
     };
 
@@ -35,7 +35,7 @@ internal static class TagMappings
             Name = tag.Name,
             Description = tag.Description,
             CreatedAtUtc = tag.CreatedAtUtc,
-            UpdatedUtc = tag.UpdatedUtc
+            UpdatedAtUtc = tag.UpdatedAtUtc
         };
     }
 
@@ -43,6 +43,6 @@ internal static class TagMappings
     {
         tag.Name = dto.Name;
         tag.Description = dto.Description;
-        tag.UpdatedUtc = DateTime.UtcNow;
+        tag.UpdatedAtUtc = DateTime.UtcNow;
     }
 }

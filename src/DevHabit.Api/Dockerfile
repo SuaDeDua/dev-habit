@@ -25,4 +25,6 @@ RUN dotnet publish "./src/DevHabit.Api/DevHabit.Api.csproj" -c $BUILD_CONFIGURAT
 FROM base AS final
 WORKDIR /app
 COPY --from=publish /app/publish .
+HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 \
+  CMD wget --no-verbose --tries=1 --spider http://localhost:5000/health || exit 1
 ENTRYPOINT ["dotnet", "DevHabit.Api.dll"]

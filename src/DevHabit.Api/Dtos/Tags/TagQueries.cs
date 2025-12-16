@@ -13,7 +13,7 @@ internal static class TagQueries
             Name = tag.Name,
             Description = tag.Description,
             CreatedAtUtc = tag.CreatedAtUtc,
-            UpdatedUtc = tag.CreatedAtUtc
+            UpdatedAtUtc = tag.UpdatedAtUtc
         };
     }
 }
