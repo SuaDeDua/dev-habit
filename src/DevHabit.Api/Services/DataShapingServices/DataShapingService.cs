@@ -9,12 +9,12 @@ namespace DevHabit.Api.Services.DataShapingServices;
 
 public sealed class DataShapingService : IDataShapingService
 {
-    private readonly ConcurrentDictionary<Type, PropertyInfo[]> _propertiesCache = [];
+    private static readonly ConcurrentDictionary<Type, PropertyInfo[]> PropertiesCache = [];
 
     public ExpandoObject ShapeData<T>(
-            T entity,
-            string? fields = null,
-            ICollection<LinkDto>? links = null)
+        T entity,
+        string? fields = null,
+        ICollection<LinkDto>? links = null)
     {
         if (!AreAllFieldsValid<T>(fields))
         {
@@ -22,19 +22,10 @@ public sealed class DataShapingService : IDataShapingService
         }
 
         HashSet<string> fieldsSet = fields?
-                .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
-                .ToHashSet(StringComparer.OrdinalIgnoreCase) ?? [];
+            .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            .ToHashSet(StringComparer.OrdinalIgnoreCase) ?? [];
 
-        PropertyInfo[] propertyInfos = _propertiesCache.GetOrAdd(
-            typeof(T),
-            type => type.GetProperties(BindingFlags.Public | BindingFlags.Instance));
-
-        if (fieldsSet.Count > 0)
-        {
-            propertyInfos = propertyInfos
-                .Where(x => fieldsSet.Contains(x.Name))
-                .ToArray();
-        }
+        PropertyInfo[] propertyInfos = GetFilteredProperties<T>(fieldsSet);
 
         IDictionary<string, object?> shapedObject = new ExpandoObject();
 
@@ -43,13 +34,18 @@ public sealed class DataShapingService : IDataShapingService
             shapedObject[propertyInfo.Name] = propertyInfo.GetValue(entity);
         }
 
+        if (links is not null)
+        {
+            shapedObject.TryAdd(HateoasPropertyNames.Links, links);
+        }
+
         return (ExpandoObject)shapedObject;
     }
 
     public ICollection<ExpandoObject> ShapeCollectionData<T>(
-            ICollection<T> entities,
-            string? fields = null,
-            Func<T, ICollection<LinkDto>>? linksFactory = null)
+        ICollection<T> entities,
+        string? fields = null,
+        Func<T, ICollection<LinkDto>>? linksFactory = null)
     {
         if (!AreAllFieldsValid<T>(fields))
         {
@@ -57,19 +53,10 @@ public sealed class DataShapingService : IDataShapingService
         }
 
         HashSet<string> fieldsSet = fields?
-                .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
-                .ToHashSet(StringComparer.OrdinalIgnoreCase) ?? [];
+            .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            .ToHashSet(StringComparer.OrdinalIgnoreCase) ?? [];
 
-        PropertyInfo[] propertyInfos = _propertiesCache.GetOrAdd(
-            typeof(T),
-            t => t.GetProperties(BindingFlags.Public | BindingFlags.Instance));
-
-        if (fieldsSet.Count > 0)
-        {
-            propertyInfos = propertyInfos
-                .Where(x => fieldsSet.Contains(x.Name))
-                .ToArray();
-        }
+        PropertyInfo[] propertyInfos = GetFilteredProperties<T>(fieldsSet);
 
         List<ExpandoObject> shapedObjects = new(entities.Count);
 
@@ -87,21 +74,19 @@ public sealed class DataShapingService : IDataShapingService
                 shapedObject.TryAdd(HateoasPropertyNames.Links, linksFactory(entity));
             }
 
-            // apply data shaping
-
             shapedObjects.Add((ExpandoObject)shapedObject);
         }
 
         return shapedObjects;
     }
 
-    private bool AreAllFieldsValid<T>(string? fields)
+    private static bool AreAllFieldsValid<T>(string? fields)
     {
         HashSet<string> fieldsSet = fields?
             .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
             .ToHashSet(StringComparer.OrdinalIgnoreCase) ?? [];
 
-        string[] propertyNames = _propertiesCache
+        string[] propertyNames = PropertiesCache
             .GetOrAdd(
                 typeof(T),
                 type => type.GetProperties(BindingFlags.Public | BindingFlags.Instance))
@@ -109,5 +94,16 @@ public sealed class DataShapingService : IDataShapingService
             .ToArray();
 
         return fieldsSet.All(f => propertyNames.Contains(f, StringComparer.OrdinalIgnoreCase));
+    }
+
+    private static PropertyInfo[] GetFilteredProperties<T>(HashSet<string> fieldsSet)
+    {
+        var properties = PropertiesCache.GetOrAdd(
+            typeof(T),
+            type => type.GetProperties(BindingFlags.Public | BindingFlags.Instance));
+
+        return fieldsSet.Count > 0
+            ? properties.Where(x => fieldsSet.Contains(x.Name)).ToArray()
+            : properties;
     }
 }

@@ -15,7 +15,7 @@ public sealed class UsersController(ApplicationDbContext dbContext) : Controller
     public async Task<IActionResult> GetUserById(string id)
     {
         UserDto? user = await _dbContext.Users.AsNoTracking()
-            .Where(u => u.Id == id)
+            .Where(x => x.Id == id)
             .Select(UserQueries.ProjectToDto())
             .FirstOrDefaultAsync();
 
