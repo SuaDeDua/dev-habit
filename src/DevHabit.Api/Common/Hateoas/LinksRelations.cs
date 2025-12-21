@@ -1,6 +1,6 @@
-﻿namespace DevHabit.Api.Common;
+﻿namespace DevHabit.Api.Common.Hateoas;
 
-public static class LinkRelations
+internal static class LinkRelations
 {
     public const string Self = "self";
 

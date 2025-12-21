@@ -1,4 +1,4 @@
-﻿using DevHabit.Api.Common;
+﻿using DevHabit.Api.Common.Sorting;
 using DevHabit.Api.Entities;
 
 namespace DevHabit.Api.Dtos.Habits;
@@ -108,7 +108,7 @@ internal static class HabitMappings
         habit.EndDate = dto.EndDate;
 
         // Update milestone if provided
-        if (dto.Milestone != null)
+        if (dto.Milestone is not null)
         {
             habit.Milestone ??= new Milestone(); // Create new if doesn't exist
             habit.Milestone.Target = dto.Milestone.Target;

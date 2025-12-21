@@ -1,12 +1,10 @@
-﻿using DevHabit.Api.Services;
-
-namespace DevHabit.Api.Common;
+﻿namespace DevHabit.Api.Common.Hateoas;
 
 internal static class HateoasHelpers
 {
     public static bool ShouldIncludeHateoas(string? acceptHeader)
     {
-        return acceptHeader != null &&
+        return acceptHeader is not null &&
             CustomMediaTypesNames.Application.HateoasMediaTypes.Contains(acceptHeader);
     }
 }

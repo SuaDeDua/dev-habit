@@ -1,10 +1,13 @@
+[Options]
+variable: host=https://localhost:5001
+variable: habit_id=h_dummy
+
 # Get Habits
-GET {{host}}/api/habits?fields=id,name
-# Accept: application/vnd.dev-habit.hateoas+json
+GET {{host}}/api/habits?fields=id,name,createdAtUtc
 Accept: application/json
 
 # Get Habit by Id
-GET {{host}}/api/habits/{{habit_resource_id}}
+GET {{host}}/api/habits/{{habit_id}}
 Content-Type: application/vnd.dev-habit.hateoas+json
 
 # Create Habit
@@ -12,11 +15,11 @@ POST {{host}}/api/habits
 Accept: application/json
 Content-Type: application/json
 {
-  "name": null,
+  "name": "hurl better than kulala",
   "description": null,
-  "type": 4,
+  "type": 1,
   "frequency": {
-    "type": 5,
+    "type": 2,
     "timesPerPeriod": 1
   },
   "target": {
@@ -24,13 +27,13 @@ Content-Type: application/json
     "unit": "minutes"
   },
   "milestone": {
-    "target": -1
+    "target": 1
   },
   "endDate": "2024-12-01"
 }
 
 # Update Habit
-PUT {{host}}/api/habits/{{habit_resource_id}}
+PUT {{host}}/api/habits/{{habit_id}}
 Accept: application/json
 Content-Type: application/json
 {
@@ -38,7 +41,7 @@ Content-Type: application/json
   "description": "The new description",
   "type": 2,
   "frequency": {
-    "type": 1,
+    "type": 2,
     "timesPerPeriod": 1
   },
   "target": {
@@ -46,12 +49,12 @@ Content-Type: application/json
     "unit": "minutes"
   },
   "milestone": {
-    "target": 100
+    "target": 1
   }
 }
 
 # Partially Update Habit
-PATCH {{host}}/api/habits/{{habit_resource_id}}
+PATCH {{host}}/api/habits/{{habit_id}}
 Accept: application/json
 Content-Type: application/json
 [
@@ -67,5 +70,5 @@ Content-Type: application/json
 ]
 
 # Delete Habit
-DELETE {{host}}/api/habits/
+DELETE {{host}}/api/habits/{{habit_id}}
 Accept: application/json

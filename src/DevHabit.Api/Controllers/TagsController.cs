@@ -1,14 +1,15 @@
-using DevHabit.Api.Common;
 using DevHabit.Api.Database;
 using DevHabit.Api.Dtos.Tags;
 using DevHabit.Api.Dtos.Common;
 using DevHabit.Api.Dtos.Habits;
 using DevHabit.Api.Entities;
 using DevHabit.Api.Extensions;
-using DevHabit.Api.Services.LinkServices;
 using FluentValidation;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using DevHabit.Api.Services;
+using DevHabit.Api.Common.DataShaping;
+using DevHabit.Api.Common.Hateoas;
 
 namespace DevHabit.Api.Controllers;
 
@@ -16,10 +17,10 @@ namespace DevHabit.Api.Controllers;
 [Route("api/tags")]
 public sealed class TagsController(
         ApplicationDbContext dbContext,
-        ILinkService linkService) : ControllerBase
+        LinkService linkService) : ControllerBase
 {
     private readonly ApplicationDbContext _dbContext = dbContext;
-    private readonly ILinkService _linkService = linkService;
+    private readonly LinkService _linkService = linkService;
 
     [HttpGet]
     public async Task<IActionResult> GetTags(
@@ -30,14 +31,20 @@ public sealed class TagsController(
 
         string? searchTerm = tagsParameters.SearchTerm?.Trim().ToLowerInvariant();
 
-        PaginationResult<TagDto> result = await _dbContext.Tags.AsNoTracking()
+        ShapedPaginationResult<TagDto> result = await _dbContext.Tags.AsNoTracking()
             .Where(x =>
                     searchTerm == null ||
                     x.Name.ToLower().Contains(searchTerm) ||
                     x.Description != null && x.Description.ToLower().Contains(searchTerm))
             .SortByQueryString(tagsParameters.Sort, TagMappings.SortMapping.Mappings)
             .Select(TagQueries.ProjectToDto())
-            .ToPaginationResultAsync(tagsParameters.Page, tagsParameters.PageSize);
+            .ToShapedPaginationResultAsync(tagsParameters.Page, tagsParameters.PageSize, tagsParameters.Fields)
+            .WithHateoasAsync(new()
+            {
+                ItemLinksFactory = x => CreateLinksForTag(x.Id, tagsParameters.Fields),
+                CollectionLinksFactory = x => CreateLinksForTags(tagsParameters, x.HasPreviousPage, x.HasNextPage),
+                AcceptHeader = tagsParameters.Accept
+            });
 
         return Ok(result);
     }
@@ -50,12 +57,8 @@ public sealed class TagsController(
         ShapedResult? result = await _dbContext.Tags.AsNoTracking()
             .Where(x => x.Id == id)
             .Select(TagQueries.ProjectToDto())
-            .ToShapedFirstOrDefaultAsync(new()
-            {
-                Fields = fields,
-                Links = CreateLinksForTag(id, fields),
-                HttpContext = HttpContext,
-            });
+            .ToShapedFirstOrDefaultAsync(fields)
+            .WithHateoasAsync(CreateLinksForTag(id, fields), tagParameters.Accept);
 
         return result == null ? NotFound() : Ok(result.Item);
     }
@@ -63,6 +66,7 @@ public sealed class TagsController(
     [HttpPost]
     public async Task<IActionResult> CreateTag(
             CreateTagDto createTagDto,
+            AcceptHeaderDto acceptHeaderDto,
             IValidator<CreateTagDto> validator)
     {
         await validator.ValidateAndThrowAsync(createTagDto);
@@ -72,8 +76,6 @@ public sealed class TagsController(
         bool tagExists = await _dbContext.Tags
             .AnyAsync(x => x.Name.ToLower() == createTagDto.Name.ToLower());
 
-        // bool tagExists = await _dbContext.Tags
-        //     .AnyAsync(x => string.Equals(x.Name, createTagDto.Name, StringComparison.OrdinalIgnoreCase));
         if (tagExists)
         {
             return Problem(
@@ -86,6 +88,13 @@ public sealed class TagsController(
         await _dbContext.SaveChangesAsync();
 
         TagDto tagDto = tag.ToDto();
+
+        if (HateoasHelpers.ShouldIncludeHateoas(acceptHeaderDto.Accept))
+        {
+            var result = DataShaper.ShapeData(tagDto, CreateLinksForTag(tagDto.Id));
+
+            return CreatedAtAction(nameof(GetTag), new { id = tagDto.Id }, result);
+        }
 
         return CreatedAtAction(nameof(GetTag), new { id = tagDto.Id }, tagDto);
     }
@@ -134,10 +143,54 @@ public sealed class TagsController(
         return NoContent();
     }
 
-    private ICollection<LinkDto> CreateLinksForTag(string id, string? fields) =>
+    private ICollection<LinkDto> CreateLinksForTag(string id, string? fields = null) =>
             [
                 _linkService.Create(nameof(GetTag), LinkRelations.Self,HttpMethods.Get, new{id,fields}),
                 _linkService.Create(nameof(UpdateTag), LinkRelations.Update,HttpMethods.Put, new{id}),
                 _linkService.Create(nameof(DeleteTag), LinkRelations.Delete,HttpMethods.Delete, new{id}),
             ];
+    private ICollection<LinkDto> CreateLinksForTags(
+        TagsParameters parameters,
+        bool hasPreviousPage,
+        bool hasNextPage)
+    {
+        ICollection<LinkDto> links =
+        [
+            _linkService.Create(nameof(GetTags), LinkRelations.Self, HttpMethods.Get, new
+            {
+                q = parameters.SearchTerm,
+                fields = parameters.Fields,
+                sort = parameters.Sort,
+                page = parameters.Page,
+                page_size = parameters.PageSize,
+            }),
+            _linkService.Create(nameof(CreateTag), LinkRelations.Create, HttpMethods.Post),
+        ];
+
+        if (hasPreviousPage)
+        {
+            links.Add(_linkService.Create(nameof(GetTags), LinkRelations.PreviousPage, HttpMethods.Get, new
+            {
+                q = parameters.SearchTerm,
+                fields = parameters.Fields,
+                sort = parameters.Sort,
+                page = parameters.Page - 1,
+                page_size = parameters.PageSize,
+            }));
+        }
+
+        if (hasNextPage)
+        {
+            links.Add(_linkService.Create(nameof(GetTags), LinkRelations.NextPage, HttpMethods.Get, new
+            {
+                q = parameters.SearchTerm,
+                fields = parameters.Fields,
+                sort = parameters.Sort,
+                page = parameters.Page + 1,
+                page_size = parameters.PageSize,
+            }));
+        }
+
+        return links;
+    }
 }

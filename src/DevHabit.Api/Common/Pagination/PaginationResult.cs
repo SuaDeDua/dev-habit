@@ -1,10 +1,11 @@
-﻿using DevHabit.Api.Dtos.Common;
+﻿using DevHabit.Api.Common.Hateoas;
+using DevHabit.Api.Dtos.Common;
 
-namespace DevHabit.Api.Common;
+namespace DevHabit.Api.Common.Pagination;
 
 public sealed record PaginationResult<T> : ICollectionRespose<T>, IPaginationResult, ILinksRespose
 {
-    public required ICollection<T> Data { get; init; }
+    public required IReadOnlyCollection<T> Data { get; init; }
 
     public int Page { get; init; }
 
@@ -18,5 +19,5 @@ public sealed record PaginationResult<T> : ICollectionRespose<T>, IPaginationRes
 
     public bool HasNextPage => Page < TotalPages;
 
-    public List<LinkDto> Links { get; init; } = [];
+    public IReadOnlyCollection<LinkDto> Links { get; init; } = [];
 }

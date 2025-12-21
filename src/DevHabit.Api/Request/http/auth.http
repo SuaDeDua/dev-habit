@@ -1,0 +1,37 @@
+@BasePath = api/auth
+@DevHabitApiHostAddress = https://localhost:5001
+
+
+### Register a User
+
+POST {{DevHabitApiHostAddress}}/{{BasePath}}/register HTTP/1.1
+Accept: application/json
+Content-Type: application/json
+
+{
+  "name": "TestUser",
+  "email": "test@mail.com",
+  "password": "Az123456!",
+  "confirmationPassword": "Az123456!"
+}
+
+### Login a User
+
+POST {{DevHabitApiHostAddress}}/{{BasePath}}/login HTTP/1.1
+Accept: application/json
+Content-Type: application/json
+
+{
+  "email": "test@mail.com",
+  "password": "Az123456!"
+}
+
+### Refresh a User Tokens
+
+POST {{DevHabitApiHostAddress}}/{{BasePath}}/refresh HTTP/1.1
+Accept: application/json
+Content-Type: application/json
+
+{
+  "refreshToken": ""
+}
