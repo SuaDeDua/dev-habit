@@ -1,0 +1,19 @@
+<div style="padding: 20px;">
+  <h2>My Habits</h2>
+  
+  <div class="habit-grid" style="display: flex; gap: 20px; flex-wrap: wrap;">
+    @for (habit of habits; track habit.id) {
+      <mat-card style="width: 300px; margin-bottom: 20px;">
+        <mat-card-header>
+          <mat-card-title>{{ habit.name }}</mat-card-title>
+          <mat-card-subtitle>{{ habit.description }}</mat-card-subtitle>
+        </mat-card-header>
+        <mat-card-content>
+          <p>Type: {{ habit.type === 1 ? 'Binary' : 'Measurable' }}</p>
+        </mat-card-content>
+      </mat-card>
+    } @empty {
+      <p>No habits found.</p>
+    }
+  </div>
+</div>

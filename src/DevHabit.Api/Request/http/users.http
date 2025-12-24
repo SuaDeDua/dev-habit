@@ -1,9 +1,18 @@
 @BasePath = api/users
 @DevHabitApiHostAddress = https://localhost:5001
 @ResourceId = u_019718c8-a728-7a03-8f07-88983cb6244a
+@token = {{login.response.body.accessToken}}
+# @token = {{refresh.response.body.accessToken}}
 
 
 ### Get User by Id
 
 GET {{DevHabitApiHostAddress}}/{{BasePath}}/{{ResourceId}} HTTP/1.1
 Accept: application/json
+Authorization: Bearer {{token}}
+
+### Get Current User
+
+GET {{DevHabitApiHostAddress}}/{{BasePath}}/me HTTP/1.1
+Accept: application/json
+Authorization: Bearer {{token}}

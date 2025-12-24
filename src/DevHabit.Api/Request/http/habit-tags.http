@@ -2,11 +2,14 @@
 @DevHabitApiHostAddress = https://localhost:5001
 @HabitId = h_01962bc2-765b-7e35-846e-42568b36975b
 @TagId = t_019630d0-d41f-75bb-901a-e74d41bf62ca
+@token = {{login.response.body.accessToken}}
+# @token = {{refresh.response.body.accessToken}}
 
 
 ### Upsert Habit Tags
 
 PUT {{DevHabitApiHostAddress}}/{{BasePath}} HTTP/1.1
+Authorization: Bearer {{token}}
 Accept: application/json
 Content-Type: application/json
 
@@ -20,4 +23,5 @@ Content-Type: application/json
 ### Delete Habit Tag
 
 DELETE {{DevHabitApiHostAddress}}/{{BasePath}}/{{TagId}} HTTP/1.1
+Authorization: Bearer {{token}}
 Accept: application/json

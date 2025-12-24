@@ -17,21 +17,31 @@ namespace DevHabit.Api.Controllers;
 [Route("api/tags")]
 public sealed class TagsController(
         ApplicationDbContext dbContext,
-        LinkService linkService) : ControllerBase
+        LinkService linkService,
+        UserContext userContext) : ControllerBase
 {
     private readonly ApplicationDbContext _dbContext = dbContext;
     private readonly LinkService _linkService = linkService;
+    private readonly UserContext _userContext = userContext;
 
     [HttpGet]
     public async Task<IActionResult> GetTags(
             TagsParameters tagsParameters,
             IValidator<TagsParameters> validator)
     {
+        string? userId = await _userContext.GetUserIdAsync();
+
+        if (string.IsNullOrWhiteSpace(userId))
+        {
+            return Unauthorized();
+        }
+
         await validator.ValidateAndThrowAsync(tagsParameters);
 
         string? searchTerm = tagsParameters.SearchTerm?.Trim().ToLowerInvariant();
 
         ShapedPaginationResult<TagDto> result = await _dbContext.Tags.AsNoTracking()
+            .Where(x => x.UserId == userId)
             .Where(x =>
                     searchTerm == null ||
                     x.Name.ToLower().Contains(searchTerm) ||
@@ -52,10 +62,17 @@ public sealed class TagsController(
     [HttpGet("{id}")]
     public async Task<IActionResult> GetTag(string id, TagParameters tagParameters)
     {
+        string? userId = await _userContext.GetUserIdAsync();
+
+        if (string.IsNullOrWhiteSpace(userId))
+        {
+            return Unauthorized();
+        }
+
         string? fields = tagParameters.Fields;
 
         ShapedResult? result = await _dbContext.Tags.AsNoTracking()
-            .Where(x => x.Id == id)
+            .Where(x => x.Id == id && x.UserId == userId)
             .Select(TagQueries.ProjectToDto())
             .ToShapedFirstOrDefaultAsync(fields)
             .WithHateoasAsync(CreateLinksForTag(id, fields), tagParameters.Accept);
@@ -69,9 +86,16 @@ public sealed class TagsController(
             AcceptHeaderDto acceptHeaderDto,
             IValidator<CreateTagDto> validator)
     {
+        string? userId = await _userContext.GetUserIdAsync();
+
+        if (string.IsNullOrWhiteSpace(userId))
+        {
+            return Unauthorized();
+        }
+
         await validator.ValidateAndThrowAsync(createTagDto);
 
-        Tag tag = createTagDto.ToEntity();
+        Tag tag = createTagDto.ToEntity(userId);
 
         bool tagExists = await _dbContext.Tags
             .AnyAsync(x => x.Name.ToLower() == createTagDto.Name.ToLower());
@@ -102,7 +126,14 @@ public sealed class TagsController(
     [HttpPut("{id}")]
     public async Task<IActionResult> UpdateTag(string id, UpdateTagDto updateTagDto)
     {
-        Tag? tag = await _dbContext.Tags.FirstOrDefaultAsync(x => x.Id == id);
+        string? userId = await _userContext.GetUserIdAsync();
+
+        if (string.IsNullOrWhiteSpace(userId))
+        {
+            return Unauthorized();
+        }
+
+        Tag? tag = await _dbContext.Tags.FirstOrDefaultAsync(x => x.Id == id && x.UserId == userId);
 
         if (tag == null)
         {
@@ -129,7 +160,14 @@ public sealed class TagsController(
     [HttpDelete("{id}")]
     public async Task<IActionResult> DeleteTag(string id)
     {
-        Tag? tag = await _dbContext.Tags.FirstOrDefaultAsync(h => h.Id == id);
+        string? userId = await _userContext.GetUserIdAsync();
+
+        if (string.IsNullOrWhiteSpace(userId))
+        {
+            return Unauthorized();
+        }
+
+        Tag? tag = await _dbContext.Tags.FirstOrDefaultAsync(x => x.Id == id && x.UserId == userId);
 
         if (tag == null)
         {

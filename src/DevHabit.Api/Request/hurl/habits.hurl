@@ -1,17 +1,16 @@
-[Options]
-variable: host=https://localhost:5001
-variable: habit_id=h_dummy
-
 # Get Habits
 GET {{host}}/api/habits?fields=id,name,createdAtUtc
+Authorization: Bearer {{token}}
 Accept: application/json
 
 # Get Habit by Id
 GET {{host}}/api/habits/{{habit_id}}
+Authorization: Bearer {{token}}
 Content-Type: application/vnd.dev-habit.hateoas+json
 
 # Create Habit
 POST {{host}}/api/habits
+Authorization: Bearer {{token}}
 Accept: application/json
 Content-Type: application/json
 {
@@ -34,6 +33,7 @@ Content-Type: application/json
 
 # Update Habit
 PUT {{host}}/api/habits/{{habit_id}}
+Authorization: Bearer {{token}}
 Accept: application/json
 Content-Type: application/json
 {
@@ -55,6 +55,7 @@ Content-Type: application/json
 
 # Partially Update Habit
 PATCH {{host}}/api/habits/{{habit_id}}
+Authorization: Bearer {{token}}
 Accept: application/json
 Content-Type: application/json
 [
@@ -71,4 +72,10 @@ Content-Type: application/json
 
 # Delete Habit
 DELETE {{host}}/api/habits/{{habit_id}}
+Authorization: Bearer {{token}}
 Accept: application/json
+
+[Options]
+variable: host=https://localhost:5001
+variable: habit_id=h_dummy
+variable: token=dummy_token

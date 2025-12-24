@@ -132,12 +132,15 @@ internal static class DependencyInjectionExtensions
     public static WebApplicationBuilder AddApplicationServices(this WebApplicationBuilder builder)
     {
         builder.Services.AddHttpContextAccessor();
+        builder.Services.AddMemoryCache();
 
         builder.Services.AddValidatorsFromAssemblyContaining<IApiMarker>();
 
         builder.Services.AddScoped<LinkService>();
 
         builder.Services.AddScoped<TokenProvider>();
+        
+        builder.Services.AddScoped<UserContext>();
 
         return builder;
     }

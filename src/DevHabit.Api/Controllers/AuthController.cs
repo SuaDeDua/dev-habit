@@ -152,10 +152,25 @@ public sealed class AuthController(
         AccessTokensDto accessTokens = _tokenProvider.Create(tokenRequest);
 
         refreshToken.Token = accessTokens.RefreshToken;
-        refreshToken.ExpiresAtUtc = DateTime.UtcNow.AddMinutes(_jwtAuthOptions.RefreshTokenExpirationInDays);
+        refreshToken.ExpiresAtUtc = DateTime.UtcNow.AddMinutes(_jwtAuthOptions.ExpirationInMinutes);
 
         await _identityDbContext.SaveChangesAsync();
 
         return Ok(accessTokens);
+    }
+
+    [HttpPost("logout")]
+    public async Task<IActionResult> Logout(RefreshTokenDto refreshTokenDto)
+    {
+        RefreshToken? refreshToken = await _identityDbContext.RefreshTokens
+            .FirstOrDefaultAsync(x => x.Token == refreshTokenDto.RefreshToken);
+
+        if (refreshToken is not null)
+        {
+            _identityDbContext.RefreshTokens.Remove(refreshToken);
+            await _identityDbContext.SaveChangesAsync();
+        }
+
+        return NoContent();
     }
 }

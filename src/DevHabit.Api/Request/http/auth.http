@@ -1,5 +1,7 @@
 @BasePath = api/auth
 @DevHabitApiHostAddress = https://localhost:5001
+@refreshTokenFromLogin = {{login.response.body.refreshToken}}
+@token = {{login.response.body.refreshToken}}
 
 
 ### Register a User
@@ -9,7 +11,7 @@ Accept: application/json
 Content-Type: application/json
 
 {
-  "name": "TestUser",
+  "name": "TestUserr",
   "email": "test@mail.com",
   "password": "Az123456!",
   "confirmationPassword": "Az123456!"
@@ -17,6 +19,7 @@ Content-Type: application/json
 
 ### Login a User
 
+# @name login
 POST {{DevHabitApiHostAddress}}/{{BasePath}}/login HTTP/1.1
 Accept: application/json
 Content-Type: application/json
@@ -28,10 +31,22 @@ Content-Type: application/json
 
 ### Refresh a User Tokens
 
+# @name refresh
 POST {{DevHabitApiHostAddress}}/{{BasePath}}/refresh HTTP/1.1
 Accept: application/json
 Content-Type: application/json
 
 {
-  "refreshToken": ""
+  "refreshToken": "{{refreshTokenFromLogin}}"
+}
+
+### Logout
+
+# @name logout
+POST {{DevHabitApiHostAddress}}/{{BasePath}}/logout HTTP/1.1
+Accept: application/json
+Content-Type: application/json
+
+{
+  "refreshToken": "{{refreshTokenFromLogin}}"
 }

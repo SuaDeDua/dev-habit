@@ -48,3 +48,13 @@ services:
       DOTNET_DASHBOARD_UNSECURED_ALLOW_ANONYMOUS: true
     ports:
       - 18888:18888
+
+  devhabit.web:
+    image: ${DOCKER_REGISTRY-}devhabitweb
+    build:
+      context: src/DevHabit.Web
+      dockerfile: Dockerfile
+    ports:
+      - 4200:80
+    depends_on:
+      - devhabit.api

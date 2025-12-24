@@ -1,0 +1,25 @@
+<div style="display: flex; justify-content: center; margin-top: 50px;">
+  <mat-card style="width: 400px; padding: 20px;">
+    <mat-card-header>
+      <mat-card-title>Login</mat-card-title>
+    </mat-card-header>
+    
+    <mat-card-content style="display: flex; flex-direction: column; gap: 15px; margin-top: 20px;">
+      <mat-form-field>
+        <mat-label>Email</mat-label>
+        <input matInput [(ngModel)]="email" placeholder="Enter email">
+      </mat-form-field>
+
+      <mat-form-field>
+        <mat-label>Password</mat-label>
+        <input matInput [(ngModel)]="password" type="password" placeholder="Enter password">
+      </mat-form-field>
+
+      <p *ngIf="errorMessage" style="color: red;">{{ errorMessage }}</p>
+    </mat-card-content>
+
+    <mat-card-actions align="end">
+      <button mat-raised-button color="primary" (click)="onLogin()">Login</button>
+    </mat-card-actions>
+  </mat-card>
+</div>

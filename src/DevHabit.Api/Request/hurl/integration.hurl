@@ -1,3 +1,6 @@
+[Options]
+variable: email=longnd2@mail.com
+
 # 1. Register a new User
 POST {{host}}/api/auth/register
 Content-Type: application/json
