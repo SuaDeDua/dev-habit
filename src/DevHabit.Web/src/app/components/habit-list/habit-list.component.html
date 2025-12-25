@@ -10,7 +10,27 @@
         </mat-card-header>
         <mat-card-content>
           <p>Type: {{ habit.type === 1 ? 'Binary' : 'Measurable' }}</p>
+          
+          <div style="font-size: 0.8em; color: gray; margin-top: 10px;">
+            <div>Created: {{ habit.createdAtUtc | date:'dd/MM/yyyy HH:mm' }}</div>
+            
+            @if (habit.updatedAtUtc) {
+              <div>Updated: {{ habit.updatedAtUtc | date:'dd/MM/yyyy HH:mm' }}</div>
+            }
+
+            @if (habit.lastCompletedAtUtc) {
+              <div style="color: #4caf50; font-weight: bold;">
+                Last Done: {{ habit.lastCompletedAtUtc | date:'dd/MM/yyyy HH:mm' }}
+              </div>
+            }
+          </div>
         </mat-card-content>
+
+        <mat-card-actions align="end">
+          <button mat-button color="primary" [routerLink]="['/habits', habit.id]">
+            <mat-icon>visibility</mat-icon> View
+          </button>
+        </mat-card-actions>
       </mat-card>
     } @empty {
       <p>No habits found.</p>

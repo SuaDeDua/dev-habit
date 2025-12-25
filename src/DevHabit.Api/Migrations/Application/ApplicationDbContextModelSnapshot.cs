@@ -286,19 +286,23 @@ namespace DevHabit.Api.Migrations.Application
 
             modelBuilder.Entity("DevHabit.Api.Entities.HabitTag", b =>
                 {
-                    b.HasOne("DevHabit.Api.Entities.Habit", null)
+                    b.HasOne("DevHabit.Api.Entities.Habit", "Habit")
                         .WithMany("HabitTags")
                         .HasForeignKey("HabitId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
                         .HasConstraintName("fk_habit_tags_habits_habit_id");
 
-                    b.HasOne("DevHabit.Api.Entities.Tag", null)
+                    b.HasOne("DevHabit.Api.Entities.Tag", "Tag")
                         .WithMany()
                         .HasForeignKey("TagId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
                         .HasConstraintName("fk_habit_tags_tags_tag_id");
+
+                    b.Navigation("Habit");
+
+                    b.Navigation("Tag");
                 });
 
             modelBuilder.Entity("DevHabit.Api.Entities.Tag", b =>

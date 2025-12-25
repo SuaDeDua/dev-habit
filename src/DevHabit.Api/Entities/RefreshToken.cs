@@ -12,5 +12,5 @@ public sealed class RefreshToken
 
     public DateTime ExpiresAtUtc { get; set; }
 
-    public required IdentityUser User { get; set; }
+    public IdentityUser User { get; set; } = null!;
 }

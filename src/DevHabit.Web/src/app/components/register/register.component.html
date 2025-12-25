@@ -1,0 +1,39 @@
+<div style="display: flex; justify-content: center; margin-top: 50px;">
+  <mat-card style="width: 400px; padding: 20px;">
+    <mat-card-header>
+      <mat-card-title>Đăng Ký Tài Khoản</mat-card-title>
+    </mat-card-header>
+    
+    <form (ngSubmit)="onRegister()">
+      <mat-card-content style="display: flex; flex-direction: column; gap: 15px; margin-top: 20px;">
+        
+        <mat-form-field>
+          <mat-label>Tên hiển thị</mat-label>
+          <input matInput name="name" [(ngModel)]="registerData.name" required>
+        </mat-form-field>
+
+        <mat-form-field>
+          <mat-label>Email</mat-label>
+          <input matInput name="email" [(ngModel)]="registerData.email" required email>
+        </mat-form-field>
+
+        <mat-form-field>
+          <mat-label>Mật khẩu</mat-label>
+          <input matInput name="password" [(ngModel)]="registerData.password" type="password" required minlength="6">
+        </mat-form-field>
+
+        <mat-form-field>
+          <mat-label>Xác nhận mật khẩu</mat-label>
+          <input matInput name="confirmPassword" [(ngModel)]="registerData.confirmationPassword" type="password" required>
+        </mat-form-field>
+
+        <p *ngIf="errorMessage" style="color: red;">{{ errorMessage }}</p>
+      </mat-card-content>
+
+      <mat-card-actions align="end">
+        <a mat-button routerLink="/login" style="margin-right: 8px;">Đã có tài khoản?</a>
+        <button mat-raised-button color="primary" type="submit">Đăng ký</button>
+      </mat-card-actions>
+    </form>
+  </mat-card>
+</div>

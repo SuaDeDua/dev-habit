@@ -427,5 +427,12 @@ FodyWeavers.xsd
 *.msm
 *.msp
 
-.containers
+# Custom ignores for DevHabit project
+.containers/
 .DS_Store
+*.log
+src/DevHabit.Web/.angular/
+src/DevHabit.Web/dist/
+src/DevHabit.Web/.npm-cache/
+node_modules/
+**/node_modules/

@@ -1,5 +1,4 @@
-﻿
-using System.Dynamic;
+﻿using System.Dynamic;
 using DevHabit.Api.Common.DataShaping;
 using DevHabit.Api.Common.Hateoas;
 using DevHabit.Api.Dtos.Common;
@@ -11,9 +10,12 @@ public static class HateoasExtensions
     public static async Task<ShapedResult?> WithHateoasAsync(
             this Task<ShapedResult?> resultTask,
             ICollection<LinkDto> links,
-            string? acceptHeader)
+            string? acceptHeader,
+            CancellationToken cancellationToken)
     {
         ShapedResult? result = await resultTask;
+
+        cancellationToken.ThrowIfCancellationRequested();
 
         if (result is not null && HateoasHelpers.ShouldIncludeHateoas(acceptHeader))
         {
@@ -25,11 +27,14 @@ public static class HateoasExtensions
 
     public static async Task<ShapedPaginationResult<T>> WithHateoasAsync<T>(
             this Task<ShapedPaginationResult<T>> resultTask,
-            HateoasPaginationOptions<T> options)
+            HateoasPaginationOptions<T> options,
+            CancellationToken cancellationToken)
     {
         var (itemLinksFactory, collectionLinksFactory, acceptHeader) = options;
 
         ShapedPaginationResult<T> result = await resultTask;
+
+        cancellationToken.ThrowIfCancellationRequested();
 
         if (!HateoasHelpers.ShouldIncludeHateoas(acceptHeader))
         {

@@ -4,22 +4,25 @@
       <mat-card-title>Login</mat-card-title>
     </mat-card-header>
     
-    <mat-card-content style="display: flex; flex-direction: column; gap: 15px; margin-top: 20px;">
-      <mat-form-field>
-        <mat-label>Email</mat-label>
-        <input matInput [(ngModel)]="email" placeholder="Enter email">
-      </mat-form-field>
+    <form (ngSubmit)="onLogin()">
+      <mat-card-content style="display: flex; flex-direction: column; gap: 15px; margin-top: 20px;">
+        <mat-form-field>
+          <mat-label>Email</mat-label>
+          <input matInput name="email" [(ngModel)]="email" placeholder="Enter email" required>
+        </mat-form-field>
 
-      <mat-form-field>
-        <mat-label>Password</mat-label>
-        <input matInput [(ngModel)]="password" type="password" placeholder="Enter password">
-      </mat-form-field>
+        <mat-form-field>
+          <mat-label>Password</mat-label>
+          <input matInput name="password" [(ngModel)]="password" type="password" placeholder="Enter password" required>
+        </mat-form-field>
 
-      <p *ngIf="errorMessage" style="color: red;">{{ errorMessage }}</p>
-    </mat-card-content>
+        <p *ngIf="errorMessage" style="color: red;">{{ errorMessage }}</p>
+      </mat-card-content>
 
-    <mat-card-actions align="end">
-      <button mat-raised-button color="primary" (click)="onLogin()">Login</button>
-    </mat-card-actions>
+      <mat-card-actions align="end">
+        <a mat-button routerLink="/register" style="margin-right: 8px;">Chưa có tài khoản?</a>
+        <button mat-raised-button color="primary" type="submit">Login</button>
+      </mat-card-actions>
+    </form>
   </mat-card>
 </div>

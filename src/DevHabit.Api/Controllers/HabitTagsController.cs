@@ -20,9 +20,9 @@ public sealed class HabitTagsController(ApplicationDbContext dbContext, UserCont
     private readonly UserContext _userContext = userContext;
 
     [HttpPut]
-    public async Task<IActionResult> UpsertHabitTags(string habitId, UpsertHabitTagsDto upsertHabitTagsDto)
+    public async Task<IActionResult> UpsertHabitTags(string habitId, UpsertHabitTagsDto upsertHabitTagsDto, CancellationToken cancellationToken)
     {
-        string? userId = await _userContext.GetUserIdAsync();
+        string? userId = await _userContext.GetUserIdAsync(cancellationToken);
 
         if (string.IsNullOrWhiteSpace(userId))
         {
@@ -31,7 +31,7 @@ public sealed class HabitTagsController(ApplicationDbContext dbContext, UserCont
 
         Habit? habit = await _dbContext.Habits
             .Include(x => x.HabitTags)
-            .FirstOrDefaultAsync(x => x.Id == habitId && x.UserId == userId);
+            .FirstOrDefaultAsync(x => x.Id == habitId && x.UserId == userId, cancellationToken);
 
         if (habit is null)
         {
@@ -48,7 +48,7 @@ public sealed class HabitTagsController(ApplicationDbContext dbContext, UserCont
         List<string> existingTagIds = await _dbContext.Tags
             .Where(x => upsertHabitTagsDto.TagIds.Contains(x.Id) && x.UserId == userId)
             .Select(x => x.Id)
-            .ToListAsync();
+            .ToListAsync(cancellationToken);
 
         if (existingTagIds.Count != upsertHabitTagsDto.TagIds.Count)
         {
@@ -69,15 +69,15 @@ public sealed class HabitTagsController(ApplicationDbContext dbContext, UserCont
             CreatedAtUtc = DateTime.UtcNow
         }));
 
-        await _dbContext.SaveChangesAsync();
+        await _dbContext.SaveChangesAsync(cancellationToken);
 
         return NoContent();
     }
 
     [HttpDelete("{tagId}")]
-    public async Task<IActionResult> DeleteHabitTag(string habitId, string tagId)
+    public async Task<IActionResult> DeleteHabitTag(string habitId, string tagId, CancellationToken cancellationToken)
     {
-        string? userId = await _userContext.GetUserIdAsync();
+        string? userId = await _userContext.GetUserIdAsync(cancellationToken);
 
         if (string.IsNullOrWhiteSpace(userId))
         {
@@ -85,20 +85,12 @@ public sealed class HabitTagsController(ApplicationDbContext dbContext, UserCont
         }
 
         HabitTag? habitTag = await _dbContext.HabitTags
-            .Join(_dbContext.Habits,
-                    ht => ht.HabitId,
-                    h => h.Id,
-                    (ht, h) => new { HabitTag = ht, Habit = h })
-            .Join(_dbContext.Tags,
-                    hth => hth.HabitTag.TagId,
-                    t => t.Id,
-                    (hth, t) => new { hth.HabitTag, hth.Habit, Tag = t })
-            .Where(x => x.HabitTag.HabitId == habitId
-                    && x.HabitTag.TagId == tagId
-                    && x.Habit.UserId == userId
-                    && x.Tag.UserId == userId)
-            .Select(x => x.HabitTag)
-            .FirstOrDefaultAsync();
+            .Where(x =>
+                     x.HabitId == habitId &&
+                     x.TagId == tagId &&
+                     x.Habit.UserId == userId &&
+                     x.Tag.UserId == userId)
+            .FirstOrDefaultAsync(cancellationToken);
 
         if (habitTag is null)
         {
@@ -107,7 +99,7 @@ public sealed class HabitTagsController(ApplicationDbContext dbContext, UserCont
 
         _dbContext.HabitTags.Remove(habitTag);
 
-        await _dbContext.SaveChangesAsync();
+        await _dbContext.SaveChangesAsync(cancellationToken);
 
         return NoContent();
     }

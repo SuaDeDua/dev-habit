@@ -1,0 +1,62 @@
+<div style="padding: 20px; max-width: 800px; margin: 0 auto;">
+  <button mat-button routerLink="/">
+    <mat-icon>arrow_back</mat-icon> Back to Dashboard
+  </button>
+
+  @if (habit) {
+    <mat-card style="margin-top: 20px;">
+      <mat-card-header>
+        <div mat-card-avatar style="background-color: #3f51b5; color: white; display: flex; align-items: center; justify-content: center; border-radius: 50%;">
+          <mat-icon>{{ habit.type === 1 ? 'check_circle' : 'trending_up' }}</mat-icon>
+        </div>
+        <mat-card-title>{{ habit.name }}</mat-card-title>
+        <mat-card-subtitle>
+          {{ habit.type === 1 ? 'Binary Goal' : 'Measurable Goal' }}
+        </mat-card-subtitle>
+      </mat-card-header>
+
+      <mat-card-content style="margin-top: 20px;">
+        <p><strong>Description:</strong> {{ habit.description || 'No description provided.' }}</p>
+        
+        <div style="display: flex; gap: 40px; margin-top: 20px;">
+          <div>
+            <strong>Frequency</strong>
+            <p>{{ habit.frequency.timesPerPeriod }} times / {{ habit.frequency.type === 1 ? 'Day' : 'Week' }}</p>
+          </div>
+          <div>
+            <strong>Target</strong>
+            <p>{{ habit.target.value }} {{ habit.target.unit }}</p>
+          </div>
+        </div>
+
+        <div style="margin-top: 20px;">
+          <strong>Tags</strong>
+          <div style="margin-top: 10px;">
+            <mat-chip-set>
+              @for (tag of habit.tags; track tag.id) {
+                <mat-chip>{{ tag.name }}</mat-chip>
+              } @empty {
+                <span style="color: gray;">No tags.</span>
+              }
+            </mat-chip-set>
+          </div>
+        </div>
+
+        <hr style="margin: 30px 0; border: 0; border-top: 1px solid #eee;">
+
+        <div style="font-size: 0.9em; color: gray;">
+          <p>Created: {{ habit.createdAtUtc | date:'medium' }}</p>
+          @if (habit.updatedAtUtc) {
+            <p>Last updated: {{ habit.updatedAtUtc | date:'medium' }}</p>
+          }
+        </div>
+      </mat-card-content>
+
+      <mat-card-actions align="end">
+        <button mat-raised-button color="primary">Mark as Done Today</button>
+      </mat-card-actions>
+    </mat-card>
+  } @else {
+    <p>Loading thói quen...</p>
+  }
+</div>

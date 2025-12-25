@@ -13,6 +13,13 @@ interface LoginResponse {
   refreshToken: string;
 }
 
+export interface RegisterRequest {
+  email: string;
+  name: string;
+  password: string;
+  confirmationPassword: string;
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -24,6 +31,15 @@ export class AuthService {
 
   login(data: LoginRequest): Observable<LoginResponse> {
     return this.http.post<LoginResponse>('/api/auth/login', data).pipe(
+      tap(response => {
+        localStorage.setItem(this.accessTokenKey, response.accessToken);
+        localStorage.setItem(this.refreshTokenKey, response.refreshToken);
+      })
+    );
+  }
+
+  register(data: RegisterRequest): Observable<LoginResponse> {
+    return this.http.post<LoginResponse>('/api/auth/register', data).pipe(
       tap(response => {
         localStorage.setItem(this.accessTokenKey, response.accessToken);
         localStorage.setItem(this.refreshTokenKey, response.refreshToken);

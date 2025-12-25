@@ -31,16 +31,17 @@ public sealed class HabitsController(
     [HttpGet]
     public async Task<IActionResult> GetHabits(
             HabitsParameters habitParams,
-            IValidator<HabitsParameters> validator)
+            IValidator<HabitsParameters> validator,
+            CancellationToken cancellationToken)
     {
-        string? userId = await _userContext.GetUserIdAsync();
+        string? userId = await _userContext.GetUserIdAsync(cancellationToken);
 
         if (string.IsNullOrWhiteSpace(userId))
         {
             return Unauthorized();
         }
 
-        await validator.ValidateAndThrowAsync(habitParams);
+        await validator.ValidateAndThrowAsync(habitParams, cancellationToken);
 
         string? searchTerm = habitParams.SearchTerm?.Trim().ToLowerInvariant();
 
@@ -53,22 +54,22 @@ public sealed class HabitsController(
              .Where(x => habitParams.Status == null || x.Status == habitParams.Status)
              .SortByQueryString(habitParams.Sort, HabitMappings.SortMapping.Mappings)
              .Select(HabitQueries.ProjectToDto())
-             .ToShapedPaginationResultAsync(habitParams.Page, habitParams.PageSize, habitParams.Fields)
+             .ToShapedPaginationResultAsync(habitParams.Page, habitParams.PageSize, habitParams.Fields, cancellationToken)
              .WithHateoasAsync(new()
              {
                  ItemLinksFactory = x => CreateLinksForHabit(x.Id, habitParams.Fields),
                  CollectionLinksFactory = x => CreateLinksForHabits(habitParams, x.HasPreviousPage, x.HasNextPage),
-                 AcceptHeader = habitParams.Accept,
-             });
+                 AcceptHeader = habitParams.Accept
+             }, cancellationToken);
 
         return Ok(paginationResult);
     }
 
     [HttpGet("{id}")]
     [MapToApiVersion(1.0)]
-    public async Task<IActionResult> GetHabit(string id, HabitParameters habitParameters)
+    public async Task<IActionResult> GetHabit(string id, HabitParameters habitParameters, CancellationToken cancellationToken)
     {
-        string? userId = await _userContext.GetUserIdAsync();
+        string? userId = await _userContext.GetUserIdAsync(cancellationToken);
 
         if (string.IsNullOrWhiteSpace(userId))
         {
@@ -80,17 +81,17 @@ public sealed class HabitsController(
         ShapedResult? result = await _dbContext.Habits.AsNoTracking()
                     .Where(x => x.Id == id && x.UserId == userId)
                     .Select(HabitQueries.ProjectToDtoWithTags())
-                    .ToShapedFirstOrDefaultAsync(fields)
-                    .WithHateoasAsync(CreateLinksForHabit(id, fields), habitParameters.Accept);
+                    .ToShapedFirstOrDefaultAsync(fields, cancellationToken)
+                    .WithHateoasAsync(CreateLinksForHabit(id, fields), habitParameters.Accept, cancellationToken);
 
         return result == null ? NotFound() : Ok(result.Item);
     }
 
     [HttpGet("{id}")]
     [ApiVersion(2.0)]
-    public async Task<IActionResult> GetHabitV2(string id, HabitParameters habitParameters)
+    public async Task<IActionResult> GetHabitV2(string id, HabitParameters habitParameters, CancellationToken cancellationToken)
     {
-        string? userId = await _userContext.GetUserIdAsync();
+        string? userId = await _userContext.GetUserIdAsync(cancellationToken);
 
         if (string.IsNullOrWhiteSpace(userId))
         {
@@ -102,32 +103,50 @@ public sealed class HabitsController(
         ShapedResult? result = await _dbContext.Habits.AsNoTracking()
                     .Where(x => x.Id == id && x.UserId == userId)
                     .Select(HabitQueries.ProjectToDtoWithTagsV2())
-                    .ToShapedFirstOrDefaultAsync(fields)
-                    .WithHateoasAsync(CreateLinksForHabit(id, fields), habitParameters.Accept);
+                    .ToShapedFirstOrDefaultAsync(fields, cancellationToken)
+                    .WithHateoasAsync(CreateLinksForHabit(id, fields), habitParameters.Accept, cancellationToken);
 
         return result == null ? NotFound() : Ok(result.Item);
     }
 
     [HttpPost]
     public async Task<ActionResult<HabitDto>> CreateHabit(
-            CreateHabitDto createHabitDto,
+            [FromBody] CreateHabitDto createHabitDto,
             AcceptHeaderDto acceptHeaderDto,
-            IValidator<CreateHabitDto> validator)
+            IValidator<CreateHabitDto> validator,
+            CancellationToken cancellationToken)
     {
-        string? userId = await _userContext.GetUserIdAsync();
+        string? userId = await _userContext.GetUserIdAsync(cancellationToken);
 
         if (string.IsNullOrWhiteSpace(userId))
         {
             return Unauthorized();
         }
 
-        await validator.ValidateAndThrowAsync(createHabitDto);
+        await validator.ValidateAndThrowAsync(createHabitDto, cancellationToken);
 
         Habit habit = createHabitDto.ToEntity(userId);
 
+        if (createHabitDto.TagIds.Count > 0)
+        {
+            var existingTags = await _dbContext.Tags
+                .Where(t => createHabitDto.TagIds.Contains(t.Id) && t.UserId == userId)
+                .ToListAsync(cancellationToken);
+
+            foreach (var tag in existingTags)
+            {
+                habit.HabitTags.Add(new HabitTag
+                {
+                    HabitId = habit.Id,
+                    TagId = tag.Id,
+                    CreatedAtUtc = DateTime.UtcNow
+                });
+            }
+        }
+
         _dbContext.Habits.Add(habit);
 
-        await _dbContext.SaveChangesAsync();
+        await _dbContext.SaveChangesAsync(cancellationToken);
 
         HabitDto habitDto = habit.ToDto();
 
@@ -141,16 +160,21 @@ public sealed class HabitsController(
     }
 
     [HttpPut("{id}")]
-    public async Task<IActionResult> UpdateHabit(string id, UpdateHabitDto updateHabitDto)
+    public async Task<IActionResult> UpdateHabit(
+            string id,
+            UpdateHabitDto updateHabitDto,
+            CancellationToken cancellationToken)
     {
-        string? userId = await _userContext.GetUserIdAsync();
+        string? userId = await _userContext.GetUserIdAsync(cancellationToken);
 
         if (string.IsNullOrWhiteSpace(userId))
         {
             return Unauthorized();
         }
 
-        Habit? habit = await _dbContext.Habits.FirstOrDefaultAsync(x => x.Id == id && x.UserId == userId);
+        Habit? habit = await _dbContext.Habits
+            .Include(h => h.HabitTags)
+            .FirstOrDefaultAsync(x => x.Id == id && x.UserId == userId, cancellationToken);
 
         if (habit is null)
         {
@@ -159,22 +183,57 @@ public sealed class HabitsController(
 
         habit.UpdateFromDto(updateHabitDto);
 
-        await _dbContext.SaveChangesAsync();
+        // Sync Tags
+        // 1. Remove tags not in the new list
+        var tagsToRemove = habit.HabitTags
+            .Where(ht => !updateHabitDto.TagIds.Contains(ht.TagId))
+            .ToList();
+
+        foreach (var tagToRemove in tagsToRemove)
+        {
+            habit.HabitTags.Remove(tagToRemove);
+        }
+
+        // 2. Add new tags
+        var currentTagIds = habit.HabitTags.Select(ht => ht.TagId).ToHashSet();
+        var newTagIds = updateHabitDto.TagIds.Where(tid => !currentTagIds.Contains(tid)).ToList();
+
+        if (newTagIds.Count > 0)
+        {
+            var validNewTags = await _dbContext.Tags
+                .Where(t => newTagIds.Contains(t.Id) && t.UserId == userId)
+                .ToListAsync(cancellationToken);
+
+            foreach (var tag in validNewTags)
+            {
+                habit.HabitTags.Add(new HabitTag
+                {
+                    HabitId = habit.Id,
+                    TagId = tag.Id,
+                    CreatedAtUtc = DateTime.UtcNow
+                });
+            }
+        }
+
+        await _dbContext.SaveChangesAsync(cancellationToken);
 
         return NoContent();
     }
 
     [HttpPatch("{id}")]
-    public async Task<IActionResult> PatchHabit(string id, JsonPatchDocument<HabitDto> patchDocument)
+    public async Task<IActionResult> PatchHabit(
+            string id,
+            JsonPatchDocument<HabitDto> patchDocument,
+            CancellationToken cancellationToken)
     {
-        string? userId = await _userContext.GetUserIdAsync();
+        string? userId = await _userContext.GetUserIdAsync(cancellationToken);
 
         if (string.IsNullOrWhiteSpace(userId))
         {
             return Unauthorized();
         }
 
-        Habit? habit = await _dbContext.Habits.FirstOrDefaultAsync(x => x.Id == id && x.UserId == userId);
+        Habit? habit = await _dbContext.Habits.FirstOrDefaultAsync(x => x.Id == id && x.UserId == userId, cancellationToken);
 
         if (habit is null)
         {
@@ -194,22 +253,22 @@ public sealed class HabitsController(
         habit.Description = habitDto.Description;
         habit.UpdatedAtUtc = DateTime.UtcNow;
 
-        await _dbContext.SaveChangesAsync();
+        await _dbContext.SaveChangesAsync(cancellationToken);
 
         return NoContent();
     }
 
     [HttpDelete("{id}")]
-    public async Task<IActionResult> DeleteHabit(string id)
+    public async Task<IActionResult> DeleteHabit(string id, CancellationToken cancellationToken)
     {
-        string? userId = await _userContext.GetUserIdAsync();
+        string? userId = await _userContext.GetUserIdAsync(cancellationToken);
 
         if (string.IsNullOrWhiteSpace(userId))
         {
             return Unauthorized();
         }
 
-        Habit? habit = await _dbContext.Habits.FirstOrDefaultAsync(x => x.Id == id && x.UserId == userId);
+        Habit? habit = await _dbContext.Habits.FirstOrDefaultAsync(x => x.Id == id && x.UserId == userId, cancellationToken);
 
         if (habit is null)
         {
@@ -218,7 +277,7 @@ public sealed class HabitsController(
 
         _dbContext.Habits.Remove(habit);
 
-        await _dbContext.SaveChangesAsync();
+        await _dbContext.SaveChangesAsync(cancellationToken);
 
         return NoContent();
     }

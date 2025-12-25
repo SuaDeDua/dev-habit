@@ -1,4 +1,5 @@
 ﻿using System.Linq.Expressions;
+using DevHabit.Api.Dtos.Tags;
 using DevHabit.Api.Entities;
 
 namespace DevHabit.Api.Dtos.Habits;
@@ -33,7 +34,15 @@ internal static class HabitQueries
             },
             CreatedAtUtc = habit.CreatedAtUtc,
             UpdatedAtUtc = habit.UpdatedAtUtc,
-            LastCompletedAtUtc = habit.LastCompletedAtUtc
+            LastCompletedAtUtc = habit.LastCompletedAtUtc,
+            Tags = habit.Tags.Select(t => new TagDto
+            {
+                Id = t.Id,
+                Name = t.Name,
+                Description = t.Description,
+                CreatedAtUtc = t.CreatedAtUtc,
+                UpdatedAtUtc = t.UpdatedAtUtc
+            }).ToList()
         };
     }
 
@@ -66,7 +75,14 @@ internal static class HabitQueries
             CreatedAtUtc = habit.CreatedAtUtc,
             UpdatedAtUtc = habit.UpdatedAtUtc,
             LastCompletedAtUtc = habit.LastCompletedAtUtc,
-            Tags = habit.Tags.Select(x => x.Name).ToArray()
+            Tags = habit.Tags.Select(t => new TagDto
+            {
+                Id = t.Id,
+                Name = t.Name,
+                Description = t.Description,
+                CreatedAtUtc = t.CreatedAtUtc,
+                UpdatedAtUtc = t.UpdatedAtUtc
+            }).ToList()
         };
     }
 
@@ -99,7 +115,14 @@ internal static class HabitQueries
             CreatedAt = habit.CreatedAtUtc,
             UpdatedAt = habit.UpdatedAtUtc,
             LastCompletedAt = habit.LastCompletedAtUtc,
-            Tags = habit.Tags.Select(x => x.Name).ToArray()
+            Tags = habit.Tags.Select(t => new TagDto
+            {
+                Id = t.Id,
+                Name = t.Name,
+                Description = t.Description,
+                CreatedAtUtc = t.CreatedAtUtc,
+                UpdatedAtUtc = t.UpdatedAtUtc
+            }).ToList()
         };
     }
 }
