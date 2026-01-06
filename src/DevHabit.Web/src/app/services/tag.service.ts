@@ -12,7 +12,7 @@ export class TagService {
 
   private get headers() {
     return new HttpHeaders({
-      'Accept': 'application/json;v=1'
+      'Accept': 'application/json'
     });
   }
 

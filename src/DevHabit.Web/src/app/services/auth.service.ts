@@ -69,4 +69,18 @@ export class AuthService {
   isLoggedIn(): boolean {
     return !!this.getToken();
   }
+
+  refreshToken(): Observable<LoginResponse> {
+    const refreshToken = localStorage.getItem(this.refreshTokenKey);
+    
+    return this.http.post<LoginResponse>('/api/auth/refresh', { refreshToken }).pipe(
+      tap(response => {
+        localStorage.setItem(this.accessTokenKey, response.accessToken);
+        // Nếu backend có trả về refresh token mới (Rotation), lưu lại luôn
+        if (response.refreshToken) {
+          localStorage.setItem(this.refreshTokenKey, response.refreshToken);
+        }
+      })
+    );
+  }
 }

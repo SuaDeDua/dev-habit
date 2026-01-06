@@ -10,11 +10,15 @@ using Microsoft.EntityFrameworkCore;
 using DevHabit.Api.Services;
 using DevHabit.Api.Common.DataShaping;
 using DevHabit.Api.Common.Hateoas;
+using Microsoft.AspNetCore.Authorization;
+using DevHabit.Api.Common.Auth;
 
 namespace DevHabit.Api.Controllers;
 
 [ApiController]
 [Route("api/tags")]
+[Authorize(Roles = Roles.Member)]
+[Produces(CustomMediaTypesNames.Application.HateoasJson)]
 public sealed class TagsController(
         ApplicationDbContext dbContext,
         LinkService linkService,
@@ -39,20 +43,22 @@ public sealed class TagsController(
 
         await validator.ValidateAndThrowAsync(tagsParameters, cancellationToken);
 
-        string? searchTerm = tagsParameters.SearchTerm?.Trim().ToLowerInvariant();
+        var (searchTerm, sort, fields, page, pageSize) = tagsParameters;
+
+        string? normalizedSearchTerm = searchTerm?.Trim().ToLowerInvariant();
 
         ShapedPaginationResult<TagDto> result = await _dbContext.Tags.AsNoTracking()
             .Where(x => x.UserId == userId)
             .Where(x =>
-                    searchTerm == null ||
-                    x.Name.ToLower().Contains(searchTerm) ||
-                    x.Description != null && x.Description.ToLower().Contains(searchTerm))
-            .SortByQueryString(tagsParameters.Sort, TagMappings.SortMapping.Mappings)
+                    normalizedSearchTerm == null ||
+                    x.Name.ToLower().Contains(normalizedSearchTerm) ||
+                    x.Description != null && x.Description.ToLower().Contains(normalizedSearchTerm))
+            .SortByQueryString(sort, TagMappings.SortMapping.Mappings)
             .Select(TagQueries.ProjectToDto())
-            .ToShapedPaginationResultAsync(tagsParameters.Page, tagsParameters.PageSize, tagsParameters.Fields, cancellationToken)
+            .ToShapedPaginationResultAsync(page, pageSize, fields, cancellationToken)
             .WithHateoasAsync(new()
             {
-                ItemLinksFactory = x => CreateLinksForTag(x.Id, tagsParameters.Fields),
+                ItemLinksFactory = x => CreateLinksForTag(x.Id, fields),
                 CollectionLinksFactory = x => CreateLinksForTags(tagsParameters, x.HasPreviousPage, x.HasNextPage),
                 AcceptHeader = tagsParameters.Accept
             }, cancellationToken);

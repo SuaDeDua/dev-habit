@@ -29,6 +29,8 @@ if (app.Environment.IsDevelopment())
     app.MapOpenApi();
     app.ApplyMigrations<ApplicationDbContext>();
     app.ApplyMigrations<ApplicationIdentityDbContext>();
+
+    await app.SeedInitialDataAsync();
 }
 
 // app.UseHttpsRedirection();

@@ -13,7 +13,7 @@ export class HabitService {
   // Helper để tạo header chuẩn cho API Versioning
   private get headers() {
     return new HttpHeaders({
-      'Accept': 'application/json;v=1'
+      'Accept': 'application/json'
     });
   }
 

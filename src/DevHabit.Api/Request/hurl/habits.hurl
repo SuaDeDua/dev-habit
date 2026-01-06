@@ -4,9 +4,9 @@ Authorization: Bearer {{token}}
 Accept: application/json
 
 # Get Habit by Id
-GET {{host}}/api/habits/{{habit_id}}
-Authorization: Bearer {{token}}
-Content-Type: application/vnd.dev-habit.hateoas+json
+GET {{host}}/api/habits/h_019b4dd0-b252-7b3b-9792-b6bfb63c93ad
+Authorization: Bearer "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdWQiOiJkZXYtaGFiaXQuYXBwIiwiaXNzIjoiZGV2LWhhYml0LmFwaSIsImV4cCI6MTc2NjY1MjgxNywic3ViIjoiNDU1YzRkYmEtMTdkMy00MmU1LTkxY2MtYmZkZmZjOWZhYzU4IiwiZW1haWwiOiJzdWFkZWR1YUBtYWlsLmNvbSIsImlhdCI6MTc2NjY1MTAxNywibmJmIjoxNzY2NjUxMDE3fQ.N_tYUAOEQx8GovQNY7uxNH9fP8zr6r5GYZnJHMW5bC8"
+Content-Type: application/vnd.dev-habit.hateoas.1+json
 
 # Create Habit
 POST {{host}}/api/habits

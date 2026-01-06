@@ -1,5 +1,7 @@
-﻿using System.Text;
+﻿using System.IdentityModel.Tokens.Jwt;
+using System.Text;
 using Asp.Versioning;
+using DevHabit.Api.Common.Auth;
 using DevHabit.Api.Common.Hateoas;
 using DevHabit.Api.Configurations;
 using DevHabit.Api.Database;
@@ -139,7 +141,7 @@ internal static class DependencyInjectionExtensions
         builder.Services.AddScoped<LinkService>();
 
         builder.Services.AddScoped<TokenProvider>();
-        
+
         builder.Services.AddScoped<UserContext>();
 
         return builder;
@@ -163,12 +165,16 @@ internal static class DependencyInjectionExtensions
                 })
             .AddJwtBearer(options =>
                     {
+                        options.MapInboundClaims = false;
+
                         options.TokenValidationParameters = new()
                         {
                             ValidIssuer = jwtAuthOptions.Issuer,
                             ValidAudience = jwtAuthOptions.Audience,
                             IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtAuthOptions.Key)),
                             ValidateIssuerSigningKey = true,
+                            NameClaimType = JwtRegisteredClaimNames.Email,
+                            RoleClaimType = JwtCustomClaimNames.Role,
                         };
                     });
 

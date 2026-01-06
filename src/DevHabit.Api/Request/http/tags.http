@@ -1,27 +1,31 @@
 @BasePath = api/tags
 @DevHabitApiHostAddress = https://localhost:5001
-@ResourceId = t_019b265a-77ca-7904-8674-fe2732868803
+@ResourceId = t_019b5357-a1de-7050-8112-7ac19b9c11b5
 @token = {{login.response.body.accessToken}}
-# @token = {{refresh.response.body.accessToken}}
 
+
+###
+
+# @token = {{refresh.response.body.accessToken}}
+ 
 
 ### Get Tags
 
 GET {{DevHabitApiHostAddress}}/{{BasePath}} HTTP/1.1
+Accept: application/json
 Authorization: Bearer {{token}}
-Accept: application/vnd.dev-habit.hateoas+json
 
 ### Get Tag by Id
 
 GET {{DevHabitApiHostAddress}}/{{BasePath}}/{{ResourceId}} HTTP/1.1
-Authorization: Bearer {{token}}
 Accept: application/vnd.dev-habit.hateoas+json
+Authorization: Bearer {{token}}
 
 ### Create Tag
 
 POST {{DevHabitApiHostAddress}}/{{BasePath}} HTTP/1.1
-Authorization: Bearer {{token}}
 Accept: application/json
+Authorization: Bearer {{token}}
 Content-Type: application/json
 
 {
@@ -32,12 +36,12 @@ Content-Type: application/json
 ### Update Tag
 
 PUT {{DevHabitApiHostAddress}}/{{BasePath}}/{{ResourceId}} HTTP/1.1
-Authorization: Bearer {{token}}
 Accept: application/json
+Authorization: Bearer {{token}}
 Content-Type: application/json
 
 ### Delete Tag
 
 DELETE {{DevHabitApiHostAddress}}/{{BasePath}}/{{ResourceId}} HTTP/1.1
-Authorization: Bearer {{token}}
 Accept: application/json
+Authorization: Bearer {{token}}
